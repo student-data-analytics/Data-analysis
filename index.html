@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>APS University | Student Result Analysis</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: #f9f9f9;
+    }
+
+    /* ---------- HEADER ---------- */
+    header {
+      background-color: #002147;
+      color: white;
+      padding: 10px 0;
+    }
+
+    .header-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .header-left img {
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      background: white;
+      padding: 4px;
+      object-fit: cover;
+    }
+
+    .header-left h1 {
+      font-size: 1.7rem;
+      margin: 0;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 25px;
+      margin: 0;
+      padding: 0;
+    }
+
+    nav ul li a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    nav ul li a:hover {
+      color: #00bfff;
+    }
+
+    /* ---------- SUB HEADER ---------- */
+    .sub-header-box {
+      background-color: #e6f0ff;
+      color: #002147;
+      padding: 25px;
+      text-align: center;
+      margin: 20px auto 40px;
+      border-radius: 15px;
+      max-width: 1100px;
+    }
+
+    .sub-header-box h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    /* ---------- MAIN SECTION ---------- */
+    .main-section {
+      padding-bottom: 40px;
+    }
+
+    .section-title {
+      color: #004aad;
+      font-weight: 700;
+      margin-top: 40px;
+      text-align: center;
+    }
+
+    .card {
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    th {
+      background-color: #007bff !important;
+      color: white;
+    }
+
+    .btn-primary {
+      background: #007bff;
+      border: none;
+      transition: 0.3s;
+    }
+
+    .btn-primary:hover {
+      background: #0056b3;
+    }
+
+    .btn-success {
+      background: #28a745;
+      border: none;
+      transition: 0.3s;
+    }
+
+    .btn-success:hover {
+      background: #1e7e34;
+    }
+
+    .btn-warning {
+      background: #ffc107;
+      border: none;
+      transition: 0.3s;
+    }
+
+    .btn-warning:hover {
+      background: #e0a800;
+    }
+
+    canvas {
+      background: #fafafa;
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #tableSection {
+      display: none;
+    }
+
+    /* ---------- FOOTER ---------- */
+    footer {
+      background-color: #111;
+      color: #fff;
+      padding: 40px 0 10px;
+      font-size: 0.9rem;
+    }
+
+    .footer-logo {
+      font-weight: bold;
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    .footer-section h6 {
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #fff;
+    }
+
+    .footer-section ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .footer-section ul li a {
+      color: #ccc;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .footer-section ul li a:hover {
+      color: #fff;
+    }
+
+    /* 👇 यहाँ footer-bottom में बदलाव किया गया है */
+    .footer-bottom {
+      text-align: center;
+      border-top: 1px solid #333;
+      margin-top: 20px;
+      padding-top: 10px;
+      color: #007bff;     /* 🔹 Blue color */
+      font-weight: 700;   /* 🔹 Bold text */
+      font-size: 0.9rem;  /* 🔹 वही size रखा गया */
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-container">
+      <div class="header-left">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCAoiUh6ZcPkTDhuulzHFt19SPOYwtnOOqJw&s" alt="APS Logo">
+        <h1>APS University – DASS</h1>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="http://127.0.0.1:5501/finalproject.html">Home</a></li>
+          <li><a href="http://127.0.0.1:5501/about.html">About</a></li>
+          <li><a href="http://127.0.0.1:5501/StudentResultAnalysis.html" target="_blank">Service</a></li>
+          <li><a href="https://www.kaggle.com/">Resources</a></li>
+          <li><a href="https://hindicurrentaffairs.adda247.com/">News</a></li>
+          <li><a href="http://127.0.0.1:5501/content.html">Contact</a></li>
+          <li><a href="http://127.0.0.1:5501/login.html">Login/Sign Up</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- SUB HEADER -->
+  <div class="container">
+    <div class="sub-header-box">
+      <h2>Welcome To – Data Analytics for Student Success</h2>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="container main-section">
+    <section>
+      <h2 class="section-title">📊 Student Data Analysis</h2>
+
+      <div class="card p-4 mb-4" id="uploadSection">
+        <h5 class="mb-3">Upload Student Data (Excel or CSV)</h5>
+        <input type="file" id="fileInput" accept=".xlsx,.csv" class="form-control mb-3" />
+        <button class="btn btn-primary" id="uploadBtn">Upload & Analyze</button>
+      </div>
+
+      <div id="tableSection" class="card p-4">
+        <h4 class="text-center mb-3">📋 Uploaded Student Data</h4>
+        <div id="tableContainer" class="table-responsive mb-4"></div>
+
+        <div class="mb-3">
+          <label for="columnSelect" class="form-label fw-bold">Select Column for Analysis:</label>
+          <select id="columnSelect" class="form-select"></select>
+        </div>
+
+        <canvas id="chart" height="130"></canvas>
+
+        <div class="mt-3">
+          <button class="btn btn-primary me-2" onclick="printChart()">Print Chart</button>
+          <button class="btn btn-success me-2" onclick="downloadChart()">Download Chart</button>
+          <button class="btn btn-warning" onclick="downloadChart()">Save Chart</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-5 footer-section">
+          <div class="footer-logo">APS University</div>
+          <p>The <strong>Data Analytics for Student Success (DASS)</strong> programme supports educators with learning analytics.</p>
+        </div>
+
+        <div class="col-md-4 footer-section">
+          <h6>Quick Links</h6>
+          <ul>
+            <li><a href="#">DASS at a glance</a></li>
+            <li><a href="http://127.0.0.1:5501/excel.html">Services(excel)</a></li>
+            <li><a href="http://127.0.0.1:5501/result.html">Mock test analytics</a></li>
+            <li><a href="http://127.0.0.1:5501/report.html">Final Report</a></li>
+          </ul>
+        </div>
+
+        <div class="col-md-3 footer-section">
+          <h6>Contact</h6>
+          <p>Email: <a href="mailto:dass@apsu.ac.in" class="text-white">dass@apsu.ac.in</a></p>
+        </div>
+      </div>
+
+      <!-- 👇 Footer bottom modified -->
+      <div class="footer-bottom">
+        Designed by- Vivek Singh,Amit Kewat & Mahesh Saket | Student Result Analyzer © 2026
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Upload & Analyze
+    document.getElementById("uploadBtn")?.addEventListener("click", () => {
+      const fileInput = document.getElementById("fileInput");
+      const file = fileInput.files[0];
+      if (!file) { alert("Please choose a file first!"); return; }
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        displayTable(jsonData);
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    function displayTable(data) {
+      if (!data.length) return;
+
+      document.getElementById("uploadSection").style.display = "none";
+      document.getElementById("tableSection").style.display = "block";
+
+      const headers = data[0];
+      const rows = data.slice(1);
+
+      let html = "<table class='table table-bordered table-striped text-center'><thead><tr>";
+      headers.forEach(h => html += `<th>${h}</th>`);
+      html += "</tr></thead><tbody>";
+      rows.forEach(r => {
+        html += "<tr>";
+        r.forEach(c => html += `<td>${c}</td>`);
+        html += "</tr>";
+      });
+      html += "</tbody></table>";
+      document.getElementById("tableContainer").innerHTML = html;
+
+      const select = document.getElementById("columnSelect");
+      select.innerHTML = "";
+      headers.forEach((h, i) => {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = h;
+        select.appendChild(opt);
+      });
+
+      const autoColumnIndex = headers.findIndex(h => h.toLowerCase().includes("pass")) !== -1
+        ? headers.findIndex(h => h.toLowerCase().includes("pass"))
+        : headers.findIndex(h => h.toLowerCase().includes("grade"));
+
+      if (autoColumnIndex !== -1) {
+        drawChart(autoColumnIndex, headers, rows);
+        select.value = autoColumnIndex;
+      }
+
+      select.addEventListener("change", () => {
+        const colIndex = select.value;
+        drawChart(colIndex, headers, rows);
+      });
+    }
+
+    function drawChart(colIndex, headers, rows) {
+      const columnData = rows.map(r => r[colIndex]);
+      const counts = {};
+      columnData.forEach(v => counts[v] = (counts[v] || 0) + 1);
+
+      const labels = Object.keys(counts);
+      const values = Object.values(counts);
+
+      const ctx = document.getElementById("chart").getContext("2d");
+      if (window.myChart) window.myChart.destroy();
+
+      const type = headers[colIndex].toLowerCase().includes("pass") ||
+                   headers[colIndex].toLowerCase().includes("grade") ? "pie" : "bar";
+
+      window.myChart = new Chart(ctx, {
+        type: type,
+        data: { labels, datasets: [{ label: headers[colIndex], data: values,
+          backgroundColor: [
+            "rgba(54, 162, 235, 0.7)",
+            "rgba(255, 99, 132, 0.7)",
+            "rgba(255, 206, 86, 0.7)",
+            "rgba(75, 192, 192, 0.7)",
+            "rgba(153, 102, 255, 0.7)",
+            "rgba(255, 159, 64, 0.7)",
+          ], borderWidth: 1 }] },
+        options: { responsive: true,
+          plugins: { legend: { position: "top" }, title: { display: true, text: "Data Analysis Chart" } },
+          scales: type === "bar" ? { y: { beginAtZero: true } } : {} }
+      });
+    }
+
+    function printChart() {
+      const canvas = document.getElementById("chart");
+      const dataUrl = canvas.toDataURL();
+      const w = window.open('', '_blank');
+      w.document.write(`<img src="${dataUrl}" style="width:100%">`);
+      w.document.close();
+      w.print();
+    }
+
+    function downloadChart() {
+      const canvas = document.getElementById("chart");
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL("image/png");
+      link.download = "StudentChart.png";
+      link.click();
+    }
+  </script>
+</body>
+</html>
