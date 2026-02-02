@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Data Analytics 101 | APS University</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background-color: #f8f9fa;
+      line-height: 1.6;
+    }
+
+    header {
+      background-color: #002147;
+      color: white;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+
+    .main-container {
+      max-width: 1000px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .title-section {
+      background-color: #b7aba0;
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+
+    .title-section h2 {
+      margin: 0;
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    .content-section h3 {
+      font-weight: 700;
+      margin-top: 20px;
+      color: #333;
+    }
+
+    .content-section ul {
+      margin-top: 15px;
+    }
+
+    .content-section ul li {
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    /* Helpful Section */
+    .helpful-section {
+      margin-top: 50px;
+      padding: 30px;
+      background-color: #fafafa;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+    }
+
+    .helpful-section h3 {
+      color: #333;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+
+    .btn-submit {
+      background-color: #6a1b9a;
+      border: none;
+      color: white;
+      font-weight: 600;
+      padding: 8px 20px;
+      border-radius: 5px;
+      transition: background 0.3s;
+    }
+
+    .btn-submit:hover {
+      background-color: #4a0072;
+    }
+
+    #responseMessage {
+      margin-top: 15px;
+      font-weight: 600;
+      color: green;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>APS University – Student Data Analytics Portal</h1>
+  </header>
+
+  <div class="main-container">
+
+    <!-- Section 1 -->
+    <div class="title-section">
+      <h2>Student Data Analytics 101</h2>
+    </div>
+
+    <div class="content-section">
+      <h3>Uncover the Power of Data Analytics</h3>
+      <p>
+        Student data analytics is a powerful tool for educators, university staff, and institutional decision-makers:
+      </p>
+      <ul>
+        <li>Creates a shared understanding of students and the institution’s successes and challenges;</li>
+        <li>Improves administrative decision-making and organisational resource allocation;</li>
+        <li>Helps leaders transition to holistic decision-making through analyses;</li>
+        <li>Innovates and transforms academic models and pedagogical approaches;</li>
+        <li>Provides learners with insight into their learning habits and recommendations for improvement;</li>
+        <li>Identifies at-risk learners and provides intervention to assist learners in achieving success;</li>
+        <li>Increases organisational productivity and effectiveness by providing up-to-date information and rapid response to challenges.</li>
+      </ul>
+
+      <h3>Curriculum, Academic, and Learning Analytics – What is the Difference?</h3>
+      <p>
+        <strong>Curriculum analytics</strong> involves evaluating and enhancing an educational institution's curriculum.
+        <strong>Academic analytics</strong> encompasses a broader range of data analysis related to institutional effectiveness,
+        while <strong>learning analytics</strong> focuses on individual student learning experiences.
+      </p>
+      <p>
+        All fields use data to improve education but differ in scope, target, and data sources. Curriculum analytics optimises curriculum design,
+        academic analytics covers broader institutional aspects, and learning analytics concentrates on personalised student learning.
+      </p>
+    </div>
+
+    <!-- Section 2: Helpful Section -->
+    <div class="helpful-section">
+      <h3>Was this page helpful?</h3>
+      <form id="feedbackForm">
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="feedback" id="yesOption" value="Yes">
+          <label class="form-check-label" for="yesOption">Yes</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="feedback" id="noOption" value="No">
+          <label class="form-check-label" for="noOption">No</label>
+        </div>
+
+        <p class="text-muted small mt-2">
+          Indicate if you found the information on this page helpful to you.
+        </p>
+
+        <button type="button" class="btn-submit mt-2" onclick="submitFeedback()">SUBMIT</button>
+      </form>
+
+      <div id="responseMessage"></div>
+    </div>
+
+  </div>
+
+  <script>
+    function submitFeedback() {
+      const yes = document.getElementById("yesOption").checked;
+      const no = document.getElementById("noOption").checked;
+      const msg = document.getElementById("responseMessage");
+
+      if (!yes && !no) {
+        msg.style.display = "block";
+        msg.style.color = "red";
+        msg.textContent = "⚠️ Please select Yes or No before submitting.";
+        return;
+      }
+
+      msg.style.display = "block";
+      msg.style.color = "green";
+      msg.textContent = "✅ Your response is very nice! Thank you for your feedback 😊";
+    }
+  </script>
+</body>
+</html>

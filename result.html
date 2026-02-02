@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mock Test Platform — Demo</title>
+
+  <!-- Chart.js CDN (for graphs) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root{
+      --primary: #e44a3f;
+      --accent:#0ea5e9;
+      --card:#f6f9fc;
+      --muted:#777;
+      --bg:#f4f6f8;
+      font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    body{ margin:0; background:var(--bg); color:#222; }
+    header{
+      background:#fff; padding:14px 20px; display:flex; align-items:center; gap:12px;
+      box-shadow:0 1px 0 rgba(0,0,0,0.06);
+    }
+    header h1{ margin:0; font-size:18px; color:var(--primary) }
+    .container{ padding:18px; max-width:1200px; margin:0 auto; }
+
+    /* test cards */
+    .grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; }
+    .card{ background:white; border-radius:10px; padding:18px; box-shadow:0 6px 20px rgba(0,0,0,0.03); }
+    .card h3{ margin:0 0 8px 0; font-size:16px; color:#0b4b66; }
+    .meta{ display:flex; gap:12px; color:var(--muted); font-size:13px; margin-bottom:12px; }
+    .btn{ display:inline-block; padding:10px 18px; border-radius:8px; background:var(--accent); color:#fff; text-decoration:none; cursor:pointer; border:none; }
+    .btn.ghost{ background:transparent; color:var(--accent); border:1px solid rgba(14,165,233,0.12); }
+    .small{ font-size:13px; color:var(--muted); }
+
+    /* test area */
+    .test-wrap{ display:flex; gap:18px; margin-top:18px; }
+    .q-box{ flex:1; background:#fff; padding:16px; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.02); min-height:380px; }
+    .side{ width:320px; min-width:240px; max-width:360px; background:#fff; padding:16px; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.02); }
+    .question{ font-weight:600; margin-bottom:12px; }
+    .options{ list-style:none; padding:0; margin:0; }
+    .options li{ margin-bottom:10px; }
+    .option-btn{ width:100%; text-align:left; padding:10px 12px; border-radius:8px; border:1px solid #eee; background:#fafafa; cursor:pointer; }
+    .option-btn.selected{ background:linear-gradient(90deg,#e6f7ff,#fff); border-color:#bfe9ff; }
+    .controls{ display:flex; gap:10px; margin-top:14px; }
+    .bottom-actions{ display:flex; justify-content:space-between; gap:10px; margin-top:16px; align-items:center; }
+
+    /* result & stats */
+    .result-wrap{ background:#fff; padding:16px; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.02); margin-top:18px; }
+    .stat-row{ display:flex; gap:16px; align-items:center; margin-bottom:12px; }
+    .stat{ flex:1; padding:12px; border-radius:8px; background:var(--card); text-align:center; }
+    .stat h4{ margin:0; font-size:20px; color:var(--primary); }
+    .muted{ color:var(--muted); font-size:13px; }
+
+    /* nav bullets */
+    .nav-grid{ display:grid; grid-template-columns:repeat(10,1fr); gap:6px; margin-top:12px; }
+    .nav-num{ padding:8px; text-align:center; border-radius:6px; background:#fff; border:1px solid #eee; cursor:pointer; }
+    .nav-num.attempted{ background:#ffeddc; border-color:#ffd1c0; }
+    .nav-num.correct{ background:#e6ffef; border-color:#c8f9df; }
+    .nav-num.wrong{ background:#ffecec; border-color:#ffc9c9; }
+    .nav-num.marked{ outline:2px dashed #f6c; }
+
+    footer{ padding:30px; text-align:center; color:var(--muted); font-size:13px; }
+
+    /* responsive tweaks */
+    @media (max-width:900px){
+      .test-wrap{ flex-direction:column; }
+      .side{ width:100%; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Mock Test Platform — Simulated</h1>
+  <div class="small">5 Tests • 10 Questions each • 4 Options</div>
+</header>
+
+<div class="container">
+
+  <!-- Test selection -->
+  <section id="testsList">
+    <h2 style="margin-top:6px">Available Tests</h2>
+    <li><a href="http://127.0.0.1:5501/finalproject.html">Home</a></li>
+    <div class="grid" id="cards"></div>
+  </section>
+
+  <!-- Test area (hidden until start) -->
+  <section id="testArea" style="display:none; margin-top:16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <h2 id="testTitle"></h2>
+        <div class="small" id="testInfo">10 Questions • 4 Options • Max Marks: 40</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="small">Timer</div>
+        <div id="timer" style="font-weight:700; font-size:18px;">00:00</div>
+      </div>
+    </div>
+
+    <div class="test-wrap">
+      <div class="q-box">
+        <div class="question" id="qText">Question appears here</div>
+        <ul class="options" id="optionsList"></ul>
+
+        <div class="bottom-actions">
+          <div class="controls">
+            <button class="btn ghost" id="prevBtn">Previous</button>
+            <button class="btn ghost" id="nextBtn">Next</button>
+            <button class="btn ghost" id="clearBtn">Clear Response</button>
+            <button class="btn ghost" id="markBtn">Mark for Review</button>
+          </div>
+
+          <div>
+            <button class="btn" id="saveNextBtn">Save & Next</button>
+            <button class="btn" id="submitBtn" style="background:var(--primary)">Submit Test</button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;">
+          <div class="small">Question Navigation</div>
+          <div class="nav-grid" id="navGrid"></div>
+        </div>
+      </div>
+
+      <div class="side">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div class="muted">Attempt</div>
+            <div id="attemptNo">Attempt 1</div>
+          </div>
+          <div>
+            <div class="muted">Max Marks</div>
+            <div id="maxMarks">40</div>
+          </div>
+        </div>
+
+        <hr style="margin:12px 0;" />
+
+        <div>
+          <div class="muted">Section Status</div>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <div class="stat"><div class="muted">Correct</div><div id="statCorrect">0</div></div>
+            <div class="stat"><div class="muted">Wrong</div><div id="statWrong">0</div></div>
+            <div class="stat"><div class="muted">Unattempted</div><div id="statUnattempted">10</div></div>
+          </div>
+        </div>
+
+        <hr style="margin:12px 0;" />
+
+        <div style="margin-top:6px;">
+          <div class="muted">Save progress and submit when done</div>
+          <div style="margin-top:10px;">
+            <button class="btn" id="submitSideBtn" style="width:100%; background:var(--primary)">Submit Test</button>
+          </div>
+        </div>
+
+        <hr style="margin:12px 0;" />
+
+        <div>
+          <div class="muted">Test Summary</div>
+          <div class="small" style="margin-top:8px;">
+            Total Attempts for this test: <strong id="totalAttempts">0</strong><br/>
+            Topper Score: <strong id="topperScore">-</strong><br/>
+            Average Score: <strong id="avgScore">-</strong>
+          </div>
+          <div style="margin-top:10px;">
+            <button class="btn ghost" id="viewResultsBtn">View Results Dashboard</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Results / Dashboard -->
+  <section id="resultsArea" style="display:none;">
+    <h2>Results</h2>
+     <li><a href="http://127.0.0.1:5501/result.html">Back</a></li>
+    <div class="result-wrap">
+      <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+        <div style="flex:1; min-width:220px;">
+          <div class="stat-row">
+            <div class="stat">
+              <div class="muted">Your Score</div>
+              <h4 id="resScore">0 / 40</h4>
+            </div>
+            <div class="stat">
+              <div class="muted">Rank (simulated)</div>
+              <h4 id="resRank">-</h4>
+            </div>
+            <div class="stat">
+              <div class="muted">Percentile</div>
+              <h4 id="resPercent">-</h4>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:10px;">
+            <div style="flex:1;">
+              <div class="muted">Correct</div>
+              <h4 id="resCorrect">0</h4>
+            </div>
+            <div style="flex:1;">
+              <div class="muted">Wrong</div>
+              <h4 id="resWrong">0</h4>
+            </div>
+            <div style="flex:1;">
+              <div class="muted">Unattempted</div>
+              <h4 id="resUnattempt">10</h4>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="width:420px; min-width:280px;">
+          <canvas id="pieChart" width="420" height="220"></canvas>
+        </div>
+      </div>
+
+      <hr style="margin:12px 0;" />
+
+      <div>
+        <h3>Aggregate Analysis (All Attempts for this Test)</h3>
+        <div style="display:flex; gap:12px; align-items:center; margin-top:8px;">
+          <div style="flex:1;">
+            Total Students Attempted: <strong id="aggTotal">0</strong><br/>
+            Average Score: <strong id="aggAvg">-</strong><br/>
+            Top Score: <strong id="aggTop">-</strong><br/>
+            Fastest Topper Time: <strong id="aggFastTop">-</strong>
+          </div>
+          <div style="width:420px;">
+            <canvas id="barChart" width="420" height="220"></canvas>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <h4>All Attempts (most recent first)</h4>
+          <div id="attemptList"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer>Demo mock-test platform • LocalStorage-based demo. Modify questions in code as needed.</footer>
+
+<script>
+/*
+  Demo Mock Test Platform
+  - Five tests, each 10 questions (sample questions provided)
+  - LocalStorage used to persist attempts per test (key: attempts_{testId})
+  - Chart.js used for charts (CDN)
+*/
+
+// --- Test bank: 5 tests with 10 Qs each. You can edit texts here.
+const TESTS = [
+  {
+    id: 'GK',
+    title: 'General Knowledge (GK)',
+    timeMin: 2,
+    questions: [
+      {q: "भारत की राजधानी क्या है?", opts:["मुंबई","दिल्ली","कोलकाता","चेन्नई"], ans:1},
+      {q: "विश्व का सबसे ऊँचा पर्वत कौन सा है?", opts:["के2","माउंट एवरेस्ट","कंचनजंगा","ल्होत्से"], ans:1},
+      {q: "भारत का राष्ट्रीय पशु क्या है?", opts:["सिंह","हाथी","बाघ","गैंडा"], ans:2},
+      {q: "UNO का पूरा नाम क्या है?", opts:["United Nations Organization","Universal Nations Organization","United Nations","United National Organization"], ans:2},
+      {q: "किस देश का झंडा लाल और सफ़ेद है और उसमें एक क्रॉस है?", opts:["स्वीडन","जापान","स्विट्जरलैंड","नार्वे"], ans:2},
+      {q: "भारतीय संविधान कब लागू हुआ था?", opts:["1947","1950","1952","1951"], ans:1},
+      {q: "न्यूटन ने गुरुत्वाकर्षण का नियम किस वर्ष प्रकाशित किया?", opts:["1687","1700","1665","1690"], ans:0},
+      {q: "किस ग्रह को लाल ग्रह कहा जाता है?", opts:["शुक्र","मंगल","बृहस्पति","शनि"], ans:1},
+      {q: "जल का रासायनिक सूत्र क्या है?", opts:["H2O","CO2","O2","H2SO4"], ans:0},
+      {q: "विश्व में सबसे बड़ा महाद्वीप कौन सा है?", opts:["यूरोप","एशिया","अफ्रीका","अमेरिका"], ans:1},
+    ]
+  },
+
+  {
+    id: 'CA',
+    title: 'Current Affairs',
+    timeMin: 2,
+    questions: [
+      {q:"हाल ही में किस देश ने चाँद के दक्षिणी ध्रुव पर मिशन भेजा? ", opts:["भारत","चीन","रूस","जापान"], ans:0},
+      {q:"2025 में G20 की अध्यक्षता किस देश के पास थी? (sample)", opts:["इंडिया","इटली","जापान","ब्राज़िल"], ans:0},
+      {q:"COP सम्मेलन का संबंध किस विषय से है?", opts:["स्वास्थ्य","जलवायु परिवर्तन","आर्थिक घोषणाएँ","खेल"], ans:1},
+      {q:"न्यूज में 'AI' का फुल फॉर्म क्या है?", opts:["Artificial Industry","Artificial Intelligence","Automated Interface","Advanced Intelligence"], ans:1},
+      {q:"किस बैंक ने हाल में नया डिजिटल बैंक शुरू किया है? (sample)", opts:["SBI","HDFC","Yes Bank","Demo Bank"], ans:3},
+      {q:"हालिया चुनावों में voter turnout क्या दर्शाता है?", opts:["नागरिकों की संख्या","मतदान प्रतिशत","बजट","न्यूज चैनल"], ans:1},
+      {q:"विश्व स्वास्थ्य संगठन का मुख्यालय कहाँ है?", opts:["न्यूयॉर्क","जिनेवा","लंदन","पेरिस"], ans:1},
+      {q:"भारत का सबसे हालिया बजट किस साल प्रस्तुत हुआ? (sample)", opts:["2023","2024","2025","2022"], ans:2},
+      {q:"किस खेल महोत्सव का आयोजन अंतरराष्ट्रीय स्तर पर होता है?", opts:["ओलंपिक्स","IPL","Ranji","Wimbledon"], ans:0},
+      {q:"COVID-19 महामारी किस वर्ष शुरू हुई थी?", opts:["2018","2019","2020","2021"], ans:1},
+    ]
+  },
+
+  {
+    id: 'HI',
+    title: 'हिंदी',
+    timeMin: 2,
+    questions: [
+      {q:"\"प्रकृति\" शब्द का विलोम क्या है?", opts:["प्रकृत","अप्रकृति","कृत्रिम","प्राकृतिक"], ans:2},
+      {q:"\"सार\" का अर्थ कौन-सा है?", opts:["बाहर","मुख्य बात","रंग","कठिन"], ans:1},
+      {q:"कहावत: 'नाच ना जाने आँगन टेढ़ा' का अर्थ क्या है?", opts:["दोष दूसरों का","नाचना सीखो","आँगन खराब","सहनशीलता"], ans:0},
+      {q:"किस वाक्य में 'से' का प्रयोग कर्म पर हुआ है?", opts:["मैं स्कूल से आया","उसने से सिखा","यह से है","कहीं से"], ans:0},
+      {q:"'निबंध' किस प्रकार का लेखन है?", opts:["गद्य","पद्य","नाटक","गीत"], ans:0},
+      {q:"'ख़ुशी' का समानार्थी शब्द?", opts:["दुःख","आनंद","रोना","निर्दय"], ans:1},
+      {q:"'अर्थात' का अंग्रेज़ी अनुवाद?", opts:["However","Therefore","Meaning","Because"], ans:2},
+      {q:"\"जल\" का पर्यायवाची?", opts:["पानी","नदी","समुद्र","बूँद"], ans:0},
+      {q:"किस वचन में 'कर' का प्रयोग होगा?", opts:["मैं करूँगा","मैं करता","करो","करना"], ans:0},
+      {q:"'धैर्य' का अर्थ?", opts:["गुस्सा","सहनशीलता","जल्दी","आवाज़"], ans:1},
+    ]
+  },
+
+  {
+    id: 'EN',
+    title: 'English',
+    timeMin: 2,
+    questions: [
+      {q:"Pick the correct synonym of 'rapid'.", opts:["slow","fast","dull","late"], ans:1},
+      {q:"Choose correct article: ___ apple a day.", opts:["A","An","The","-"], ans:1},
+      {q:"Opposite of 'accept'.", opts:["receive","reject","allow","permit"], ans:1},
+      {q:"'They ___ going to market.' Fill correct form", opts:["is","are","am","be"], ans:1},
+      {q:"Select correct spelling:", opts:["Recieve","Receive","Receve","Reveice"], ans:1},
+      {q:"Meaning of 'benevolent'?", opts:["kind","cruel","funny","angry"], ans:0},
+      {q:"Choose past tense of 'go'.", opts:["goed","went","gone","goes"], ans:1},
+      {q:"Select preposition: 'He arrived ___ time.'", opts:["in","at","on","by"], ans:1},
+      {q:"Synonym of 'big'.", opts:["tiny","huge","small","short"], ans:1},
+      {q:"Choose correct pronoun for 'Sita and I': '___ went to market.'", opts:["We","Us","They","Them"], ans:0},
+    ]
+  },
+
+  {
+    id: 'MA',
+    title: 'Mathematics',
+    timeMin: 2,
+    questions: [
+      {q:"5 + 7 = ?", opts:["11","12","13","10"], ans:1},
+      {q:"Square of 6 = ?", opts:["36","26","46","56"], ans:0},
+      {q:"LCM of 4 and 6?", opts:["12","24","8","10"], ans:0},
+      {q:"10% of 200 = ?", opts:["10","20","30","40"], ans:1},
+      {q:"If x=3, x^2 = ?", opts:["6","9","3","12"], ans:1},
+      {q:"7 * 8 = ?", opts:["54","56","60","48"], ans:1},
+      {q:"Half of 50 = ?", opts:["20","25","30","40"], ans:1},
+      {q:"Perimeter of square side 4 = ?", opts:["12","16","8","20"], ans:1},
+      {q:"Square root of 49 = ?", opts:["6","8","7","9"], ans:2},
+      {q:"15 - 7 = ?", opts:["7","6","8","9"], ans:2},
+    ]
+  }
+];
+
+// state
+let currentTest = null;
+let curIndex = 0;
+let answers = []; // user's current attempt answers: null or selected index
+let timerInterval = null;
+let startTime = null;
+let timeLimitSec = 0;
+let marked = new Set();
+
+// helpers for storage keys
+function attemptsKey(testId){ return 'attempts_' + testId; }
+function loadAttempts(testId){
+  const raw = localStorage.getItem(attemptsKey(testId));
+  return raw ? JSON.parse(raw) : [];
+}
+function saveAttemptObj(testId, obj){
+  const arr = loadAttempts(testId);
+  arr.push(obj);
+  localStorage.setItem(attemptsKey(testId), JSON.stringify(arr));
+}
+
+// render test cards
+const cardsDiv = document.getElementById('cards');
+TESTS.forEach(t=>{
+  const div = document.createElement('div');
+  div.className='card';
+  div.innerHTML = `
+    <h3>${t.title}</h3>
+    <div class="meta">
+      <div>${t.questions.length} Questions</div>
+      <div>${t.questions.length*1 * 1} Marks</div>
+      <div>${t.timeMin} Minutes</div>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:10px;">
+      <button class="btn" data-start="${t.id}">Login to Attempt</button>
+      <button class="btn ghost" data-view="${t.id}">View Dashboard</button>
+    </div>
+  `;
+  cardsDiv.appendChild(div);
+});
+
+// event: start test or view dashboard
+cardsDiv.addEventListener('click', (e)=>{
+  if(e.target.dataset.start){
+    startTest(e.target.dataset.start);
+  }else if(e.target.dataset.view){
+    openDashboard(e.target.dataset.view);
+  }
+});
+
+// start test
+function startTest(testId){
+  currentTest = TESTS.find(x=>x.id===testId);
+  if(!currentTest) return;
+  // reset state
+  curIndex = 0;
+  answers = new Array(currentTest.questions.length).fill(null);
+  marked = new Set();
+  timeLimitSec = currentTest.timeMin * 60;
+  startTime = Date.now();
+
+  // show UI
+  document.getElementById('testsList').style.display='none';
+  document.getElementById('resultsArea').style.display='none';
+  document.getElementById('testArea').style.display='block';
+  document.getElementById('testTitle').innerText = currentTest.title;
+  document.getElementById('maxMarks').innerText = currentTest.questions.length * 1 * 1 + ' / ' + (currentTest.questions.length*2);
+  document.getElementById('attemptNo').innerText = 'Attempt ' + (loadAttempts(currentTest.id).length + 1);
+
+  // build nav
+  const navGrid = document.getElementById('navGrid');
+  navGrid.innerHTML = '';
+  for(let i=0;i<currentTest.questions.length;i++){
+    const b = document.createElement('div');
+    b.className='nav-num';
+    b.innerText = i+1;
+    b.dataset.idx = i;
+    b.addEventListener('click', ()=>{ goToQ(i); });
+    navGrid.appendChild(b);
+  }
+
+  renderQuestion();
+  startTimer();
+  updateStatsPanel();
+}
+
+// go to question
+function goToQ(i){
+  curIndex = i;
+  renderQuestion();
+}
+
+// render current question
+function renderQuestion(){
+  const q = currentTest.questions[curIndex];
+  document.getElementById('qText').innerText = `Q${curIndex+1}. ${q.q}`;
+  const opts = document.getElementById('optionsList');
+  opts.innerHTML = '';
+  q.opts.forEach((o,i)=>{
+    const li = document.createElement('li');
+    const btn = document.createElement('div');
+    btn.className = 'option-btn' + (answers[curIndex]===i ? ' selected' : '');
+    btn.innerText = o;
+    btn.addEventListener('click', ()=>{ selectOption(i); });
+    li.appendChild(btn);
+    opts.appendChild(li);
+  });
+
+  // update navigation highlight
+  const navs = document.querySelectorAll('.nav-num');
+  navs.forEach(n=>{
+    n.classList.remove('attempted','correct','wrong','marked');
+    const idx = Number(n.dataset.idx);
+    if(marked.has(idx)) n.classList.add('marked');
+    if(answers[idx] !== null){
+      n.classList.add('attempted');
+      // color correct/wrong if submitted? we'll color after submit.
+    }
+  });
+}
+
+// select option
+function selectOption(i){
+  answers[curIndex] = i;
+  renderQuestion();
+  updateStatsPanel();
+}
+
+// clear response
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  answers[curIndex] = null;
+  renderQuestion();
+  updateStatsPanel();
+});
+
+// mark for review
+document.getElementById('markBtn').addEventListener('click', ()=>{
+  if(marked.has(curIndex)) marked.delete(curIndex);
+  else marked.add(curIndex);
+  renderQuestion();
+});
+
+// prev/next
+document.getElementById('prevBtn').addEventListener('click', ()=>{
+  if(curIndex>0){ curIndex--; renderQuestion(); }
+});
+document.getElementById('nextBtn').addEventListener('click', ()=>{
+  if(curIndex < currentTest.questions.length-1){ curIndex++; renderQuestion(); }
+});
+
+// save & next
+document.getElementById('saveNextBtn').addEventListener('click', ()=>{
+  if(curIndex < currentTest.questions.length-1){ curIndex++; renderQuestion(); }
+  updateStatsPanel();
+});
+
+// submit (side or bottom)
+document.getElementById('submitBtn').addEventListener('click', submitTest);
+document.getElementById('submitSideBtn').addEventListener('click', submitTest);
+
+// view results button
+document.getElementById('viewResultsBtn').addEventListener('click', ()=>{
+  if(currentTest) openDashboard(currentTest.id);
+});
+
+// timer functions
+function startTimer(){
+  stopTimer();
+  const display = document.getElementById('timer');
+  let remaining = timeLimitSec;
+  display.innerText = formatTime(remaining);
+
+  timerInterval = setInterval(()=>{
+    remaining--;
+    if(remaining<0){
+      stopTimer();
+      alert('Time up! Submitting automatically.');
+      submitTest();
+      return;
+    }
+    display.innerText = formatTime(remaining);
+  }, 1000);
+}
+function stopTimer(){ if(timerInterval) clearInterval(timerInterval); timerInterval = null; }
+function formatTime(s){
+  const m = Math.floor(s/60);
+  const sec = s%60;
+  return String(m).padStart(2,'0')+ ':'+ String(sec).padStart(2,'0');
+}
+
+// compute results & save attempt
+function submitTest(){
+  stopTimer();
+  // compute score: +2 for correct, 0 for unattempted, -0.5 for wrong (example)
+  let correct=0, wrong=0, unattempted=0, score=0;
+  const total = currentTest.questions.length;
+  currentTest.questions.forEach((q,idx)=>{
+    const sel = answers[idx];
+    if(sel === null){ unattempted++; }
+    else if(sel === q.ans){ correct++; score += 2; }
+    else { wrong++; score -= 0.5; }
+  });
+  if(score < 0) score = 0;
+
+  const timeTakenSec = Math.round((Date.now() - startTime)/1000);
+  // save attempt object
+  const attemptObj = {
+    timestamp: Date.now(),
+    correct, wrong, unattempted, score,
+    timeTakenSec,
+    answers,
+  };
+  saveAttemptObj(currentTest.id, attemptObj);
+
+  // show result area populated
+  showResult(attemptObj);
+  document.getElementById('testArea').style.display='none';
+  document.getElementById('resultsArea').style.display='block';
+}
+
+// update panel stats (while taking)
+function updateStatsPanel(){
+  const total = currentTest.questions.length;
+  const correct = currentTest.questions.reduce((acc,q,i)=> acc + ((answers[i] !== null && answers[i] === q.ans)?1:0), 0);
+  const attempted = answers.reduce((a,b)=> a + (b!==null?1:0), 0);
+  const wrong = attempted - correct;
+  document.getElementById('statCorrect').innerText = correct;
+  document.getElementById('statWrong').innerText = wrong;
+  document.getElementById('statUnattempted').innerText = total - attempted;
+
+  // total attempts summary
+  const arr = loadAttempts(currentTest.id);
+  document.getElementById('totalAttempts').innerText = arr.length;
+  if(arr.length){
+    const top = arr.reduce((mx,a)=> a.score>mx? a.score:mx, arr[0].score);
+    document.getElementById('topperScore').innerText = top.toFixed(2);
+    const avg = (arr.reduce((s,a)=> s+a.score,0)/arr.length);
+    document.getElementById('avgScore').innerText = avg.toFixed(2);
+  } else {
+    document.getElementById('topperScore').innerText = '-';
+    document.getElementById('avgScore').innerText = '-';
+  }
+}
+
+// show result & aggregate dashboard
+function showResult(attempt){
+  // numeric
+  document.getElementById('resScore').innerText = attempt.score.toFixed(2) + ' / ' + (currentTest.questions.length*2);
+  document.getElementById('resCorrect').innerText = attempt.correct;
+  document.getElementById('resWrong').innerText = attempt.wrong;
+  document.getElementById('resUnattempt').innerText = attempt.unattempted;
+
+  // simulated rank & percentile using aggregate
+  const arr = loadAttempts(currentTest.id).slice(); // include this attempt
+  // sort descending by score
+  arr.sort((a,b)=> b.score - a.score || a.timeTakenSec - b.timeTakenSec);
+  // find rank of latest attempt (by timestamp)
+  const idx = arr.findIndex(a=> a.timestamp === attempt.timestamp);
+  const rank = idx>=0 ? (idx+1) : arr.length;
+  document.getElementById('resRank').innerText = rank + ' / ' + arr.length;
+  const percentile = arr.length ? ( (arr.length - idx) / arr.length * 100 ) : 0;
+  document.getElementById('resPercent').innerText = percentile.toFixed(2) + '%';
+
+  // pie chart (correct/wrong/unattempted)
+  const pieCtx = document.getElementById('pieChart').getContext('2d');
+  if(window._pieChart) window._pieChart.destroy();
+  window._pieChart = new Chart(pieCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Correct','Wrong','Unattempted'],
+      datasets:[{
+        data: [attempt.correct, attempt.wrong, attempt.unattempted],
+        backgroundColor: ['#38d39f','#ff7b7b','#dfe6fd'],
+      }]
+    },
+    options:{ responsive:true, maintainAspectRatio:false }
+  });
+
+  // aggregate: total attempts, average, top, fastest topper
+  const attempts = arr;
+  const totalAttempts = attempts.length;
+  const avgScore = (attempts.reduce((s,a)=> s+a.score,0) / (attempts.length || 1));
+  const topScore = attempts.reduce((mx,a)=> a.score>mx?a.score:mx, attempts.length?attempts[0].score:0);
+  // fastest topper time among those with topScore
+  const toppers = attempts.filter(a=> a.score === topScore);
+  const fastestTop = toppers.length ? toppers.reduce((mn,a)=> a.timeTakenSec < mn ? a.timeTakenSec : mn, toppers[0].timeTakenSec) : 0;
+
+  document.getElementById('aggTotal').innerText = totalAttempts;
+  document.getElementById('aggAvg').innerText = avgScore.toFixed(2);
+  document.getElementById('aggTop').innerText = topScore.toFixed(2);
+  document.getElementById('aggFastTop').innerText = fastestTop ? formatTime(fastestTop) : '-';
+
+  // bar chart: distribution of scores (buckets)
+  const bins = new Array(8).fill(0);
+  const maxPossible = currentTest.questions.length * 2;
+  attempts.forEach(a=>{
+    const p = Math.floor( (a.score / maxPossible) * bins.length );
+    const idx = Math.min(bins.length-1, Math.max(0,p));
+    bins[idx]++;
+  });
+  const labels = bins.map((_,i)=> Math.round(i*(100/bins.length)) + '%');
+
+  const barCtx = document.getElementById('barChart').getContext('2d');
+  if(window._barChart) window._barChart.destroy();
+  window._barChart = new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{ label: 'Students', data: bins, backgroundColor: '#7aa7ff' }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true } } }
+  });
+
+  // list attempts
+  const listDiv = document.getElementById('attemptList');
+  listDiv.innerHTML = '';
+  attempts.slice().reverse().forEach(a=>{
+    const el = document.createElement('div');
+    el.style.padding='8px';
+    el.style.borderBottom='1px solid #f0f0f0';
+    el.innerHTML = `<strong>Score:</strong> ${a.score.toFixed(2)} &nbsp; | &nbsp; <strong>Correct:</strong> ${a.correct} &nbsp; <strong>Wrong:</strong> ${a.wrong} &nbsp; <strong>Time:</strong> ${formatTime(a.timeTakenSec)} &nbsp; <span style="color:var(--muted); font-size:12px;">(${new Date(a.timestamp).toLocaleString()})</span>`;
+    listDiv.appendChild(el);
+  });
+}
+
+// open dashboard directly (view previous attempts)
+function openDashboard(testId){
+  currentTest = TESTS.find(x=>x.id===testId);
+  if(!currentTest) return;
+  document.getElementById('testsList').style.display='none';
+  document.getElementById('testArea').style.display='none';
+  document.getElementById('resultsArea').style.display='block';
+
+  // build aggregate from stored attempts
+  const arr = loadAttempts(currentTest.id);
+  if(arr.length){
+    // show the most recent attempt if exists
+    showResult(arr[arr.length-1]);
+  } else {
+    // show empty
+    document.getElementById('resScore').innerText = '0 / ' + (currentTest.questions.length*2);
+    document.getElementById('resCorrect').innerText = 0;
+    document.getElementById('resWrong').innerText = 0;
+    document.getElementById('resUnattempt').innerText = currentTest.questions.length;
+    document.getElementById('resRank').innerText = '-';
+    document.getElementById('resPercent').innerText = '-';
+    document.getElementById('pieChart').getContext && (function(){ try{ if(window._pieChart) window._pieChart.destroy(); }catch(e){} })();
+    document.getElementById('barChart').getContext && (function(){ try{ if(window._barChart) window._barChart.destroy(); }catch(e){} })();
+
+    document.getElementById('aggTotal').innerText = 0;
+    document.getElementById('aggAvg').innerText = '-';
+    document.getElementById('aggTop').innerText = '-';
+    document.getElementById('aggFastTop').innerText = '-';
+    document.getElementById('attemptList').innerHTML = '<div class="muted">No attempts yet for this test.</div>';
+  }
+}
+
+// on load, nothing else
+(function init(){
+  // nothing
+})();
+</script>
+
+</body>
+</html>

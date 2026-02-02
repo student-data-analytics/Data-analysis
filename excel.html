@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Data Sheet</title>
+<style>
+body {
+  font-family: "Poppins", sans-serif;
+  background: #8ccbef;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  background-color: #007bff;
+  color: white;
+  text-align: center;
+  padding: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.toolbar, .bottom-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 15px;
+}
+
+button {
+  background-color: #007bff;
+  border: none;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+input[type="text"], input[type="color"] {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 150px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 95%;
+  margin: 0 auto;
+  background: white;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  table-layout: fixed;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+th {
+  background-color: #e9f1ff;
+  position: relative;
+  user-select: none;
+}
+
+td[contenteditable="true"] {
+  background-color: #fffdf0;
+}
+
+.resizer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+}
+
+tr .row-resizer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  cursor: row-resize;
+  user-select: none;
+}
+
+canvas {
+  margin: 30px auto;
+  display: block;
+  max-width: 90%;
+}
+
+.download-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.download-dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f1f1f1;
+  min-width: 120px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  border-radius: 6px;
+}
+
+.download-dropdown-content button {
+  background-color: #007bff;
+  color: white;
+  padding: 8px 12px;
+  width: 100%;
+  text-align: left;
+  margin: 0;
+  border-radius: 0;
+}
+
+.download-dropdown:hover .download-dropdown-content {
+  display: block;
+}
+
+.download-dropdown-content button:hover {
+  background-color: #0056b3;
+}
+</style>
+</head>
+<body>
+
+<header>📊 Smart Data Sheet</header>
+
+<!-- Top buttons: Bold, Center, Color -->
+<div class="toolbar">
+  <button onclick="boldSelected()">🅱️ Bold</button>
+  <button onclick="centerSelected()">🎯 Center</button>
+  <input type="color" id="colorPicker" value="#ff0000" onchange="colorSelected()">
+</div>
+
+<!-- Main toolbar: Add/Delete/Search/Chart -->
+<div class="toolbar">
+  <button onclick="addRow()">➕ Add Row</button>
+  <button onclick="addColumn()">➕ Add Column</button>
+  <input type="text" id="deleteRowName" placeholder="Row Name to Delete">
+  <button onclick="deleteRowByName()">🗑️ Delete Row</button>
+  <input type="text" id="deleteColName" placeholder="Column Name to Delete">
+  <button onclick="deleteColumnByName()">🗑️ Delete Column</button>
+  <input type="text" id="searchInput" placeholder="🔍 Search" onkeyup="searchTable()">
+  <button onclick="generateChart()">📈 Generate Chart</button>
+</div>
+
+<!-- Data table -->
+<table id="dataTable">
+  <thead>
+    <tr>
+      <th contenteditable="true">Name<div class="resizer"></div></th>
+      <th contenteditable="true">Age<div class="resizer"></div></th>
+      <th contenteditable="true">City<div class="resizer"></div></th>
+      <th contenteditable="true">Score<div class="resizer"></div></th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<canvas id="dataChart"></canvas>
+
+<!-- Bottom download button -->
+<div class="bottom-toolbar">
+  <div class="download-dropdown">
+    <button>⬇️ Download ▼</button>
+    <div class="download-dropdown-content">
+      <button onclick="exportToExcel()">Excel (CSV)</button>
+      <button onclick="exportToPDF()">PDF</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+const tableBody = document.querySelector("#dataTable tbody");
+let selectedCells = [];
+
+// Cell selection
+document.addEventListener('click', function(e){
+  if(e.target.tagName==='TD'||e.target.tagName==='TH'){
+    if(!e.ctrlKey){
+      selectedCells.forEach(c=>c.style.outline='');
+      selectedCells = [];
+    }
+    e.target.style.outline='2px solid #ff9800';
+    selectedCells.push(e.target);
+    e.target.focus();
+  }
+});
+
+// Arrow keys & Enter navigation
+document.addEventListener('keydown', function(e){
+  if(selectedCells.length===0) return;
+  const cell = selectedCells[0];
+  const row = cell.parentElement;
+  const table = row.parentElement;
+  const rowIndex = Array.from(table.rows).indexOf(row);
+  const colIndex = Array.from(row.cells).indexOf(cell);
+  switch(e.key){
+    case "ArrowRight":
+      if(colIndex+1<row.cells.length) row.cells[colIndex+1].focus();
+      e.preventDefault();
+      break;
+    case "ArrowLeft":
+      if(colIndex-1>=0) row.cells[colIndex-1].focus();
+      e.preventDefault();
+      break;
+    case "ArrowDown":
+      if(rowIndex+1<table.rows.length) table.rows[rowIndex+1].cells[colIndex].focus();
+      e.preventDefault();
+      break;
+    case "ArrowUp":
+      if(rowIndex-1>=0) table.rows[rowIndex-1].cells[colIndex].focus();
+      e.preventDefault();
+      break;
+    case "Enter":
+      if(rowIndex+1<table.rows.length) table.rows[rowIndex+1].cells[colIndex].focus();
+      e.preventDefault();
+      break;
+  }
+});
+
+// Bold, Center, Color
+function boldSelected(){ selectedCells.forEach(c=>c.style.fontWeight='bold'); }
+function centerSelected(){ selectedCells.forEach(c=>c.style.textAlign='center'); }
+function colorSelected(){
+  const color=document.getElementById('colorPicker').value;
+  selectedCells.forEach(c=>c.style.backgroundColor=color);
+}
+
+// Add Row/Column
+function addRow(){
+  const row = tableBody.insertRow();
+  const colCount = document.querySelectorAll("#dataTable thead th").length;
+  for(let i=0;i<colCount;i++){
+    const cell=row.insertCell();
+    cell.contentEditable="true";
+  }
+  addRowResizer(row);
+}
+
+function addColumn(){
+  const th = document.createElement("th");
+  th.contentEditable="true";
+  th.textContent="New Column";
+  const resizer = document.createElement("div"); resizer.className="resizer"; th.appendChild(resizer);
+  document.querySelector("#dataTable thead tr").appendChild(th);
+  makeResizable(th);
+
+  for(let row of tableBody.rows){
+    const cell=row.insertCell(); cell.contentEditable="true";
+  }
+}
+
+// Delete Row/Column by Name
+function deleteRowByName(){
+  const name=document.getElementById('deleteRowName').value.trim().toLowerCase();
+  if(!name) return alert("Please enter row name");
+  for(let i=tableBody.rows.length-1;i>=0;i--){
+    if(tableBody.rows[i].cells[0]?.innerText.trim().toLowerCase()===name){
+      tableBody.deleteRow(i); return;
+    }
+  }
+  alert("Row not found");
+}
+
+function deleteColumnByName(){
+  const colName=document.getElementById('deleteColName').value.trim().toLowerCase();
+  if(!colName) return alert("Please enter column name");
+  const headerCells=document.querySelectorAll("#dataTable thead th");
+  for(let i=0;i<headerCells.length;i++){
+    if(headerCells[i].innerText.trim().toLowerCase()===colName){
+      document.querySelector("#dataTable thead tr").deleteCell(i);
+      for(let row of tableBody.rows){ row.deleteCell(i); }
+      return;
+    }
+  }
+  alert("Column not found");
+}
+
+// Search
+function searchTable(){
+  const val=document.getElementById("searchInput").value.toLowerCase();
+  for(let row of tableBody.rows){
+    row.style.display=row.textContent.toLowerCase().includes(val) ? "" : "none";
+  }
+}
+
+// Excel download
+function exportToExcel(){
+  let csv="";
+  const rows=document.querySelectorAll("table tr");
+  rows.forEach(r=>{
+    const cols=r.querySelectorAll("th, td");
+    csv+=Array.from(cols).map(c=>c.innerText).join(",")+"\n";
+  });
+  const blob=new Blob([csv], {type:"text/csv"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="dataset.csv"; a.click();
+}
+
+// PDF download
+function exportToPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const rows=[], tableEl=document.getElementById("dataTable");
+  for(let r=0;r<tableEl.rows.length;r++){
+    const row=[];
+    for(let c=0;c<tableEl.rows[r].cells.length;c++){
+      row.push(tableEl.rows[r].cells[c].innerText);
+    }
+    rows.push(row);
+  }
+  doc.autoTable({ head:[rows[0]], body:rows.slice(1) });
+  doc.save("dataset.pdf");
+}
+
+// Chart
+function generateChart(){
+  const names=[], scores=[];
+  for(let row of tableBody.rows){
+    const name=row.cells[0]?.innerText.trim();
+    const score=parseFloat(row.cells[row.cells.length-1]?.innerText);
+    if(name && !isNaN(score)){ names.push(name); scores.push(score); }
+  }
+  if(names.length===0) return alert("Enter data for chart (Name and Score)");
+  const ctx=document.getElementById("dataChart").getContext("2d");
+  if(window.chart) window.chart.destroy();
+  window.chart=new Chart(ctx,{
+    type:'bar',
+    data:{ labels:names, datasets:[{ label:"Score", data:scores, backgroundColor:"#007bff88" }] },
+    options:{ responsive:true, scales:{ y:{ beginAtZero:true } } }
+  });
+}
+
+// Column resize
+document.querySelectorAll(".resizer").forEach(makeResizable);
+function makeResizable(resizer){
+  let startX,startWidth;
+  resizer.addEventListener("mousedown", e=>{
+    startX=e.pageX;
+    startWidth=resizer.parentElement.offsetWidth;
+    document.addEventListener("mousemove", resize);
+    document.addEventListener("mouseup", stopResize);
+  });
+  function resize(e){ resizer.parentElement.style.width=startWidth+(e.pageX-startX)+"px"; }
+  function stopResize(){ document.removeEventListener("mousemove", resize); document.removeEventListener("mouseup", stopResize);}
+}
+
+// Row resize
+function addRowResizer(row){
+  const resizer=document.createElement("div");
+  resizer.className="row-resizer";
+  row.style.position="relative";
+  row.appendChild(resizer);
+  let startY,startHeight;
+  resizer.addEventListener("mousedown", e=>{
+    startY=e.pageY;
+    startHeight=row.offsetHeight;
+    document.addEventListener("mousemove", resizeRow);
+    document.addEventListener("mouseup", stopResize);
+  });
+  function resizeRow(e){ row.style.height=startHeight+(e.pageY-startY)+"px"; }
+  function stopResize(){ document.removeEventListener("mousemove", resizeRow); document.removeEventListener("mouseup", stopResize);}
+}
+</script>
+</body>
+</html>

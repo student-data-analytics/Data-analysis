@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>APSU-DASS - Login / Sign Up Demo</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --card:#fff;
+      --muted:#777;
+      --green:#2e8b57;
+      --blue:#3b82f6;
+      --indigo:#6d28d9;
+      --orange:#f97316;
+      --shadow: 0 6px 18px rgba(25,25,25,0.06);
+      font-family: Inter, system-ui, Arial, sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh;
+      background:var(--bg);
+      color:#111;
+      display:flex; align-items:flex-start; justify-content:center;
+      padding:48px 16px;
+    }
+    header{
+      position:fixed; left:16px; top:14px;
+      display:flex; align-items:center; gap:10px;
+      font-weight:600; font-size:22px; color:#1f9b63;
+    }
+    .container{
+      width:760px; max-width:100%;
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:8px;
+      padding:22px;
+      box-shadow:var(--shadow);
+      border:1px solid rgba(0,0,0,0.06);
+      max-width:520px;
+      margin:68px auto;
+    }
+    h2{margin:0 0 8px; font-size:22px}
+    p.small{margin:0 0 18px; color:var(--muted)}
+
+    .btn{
+      display:flex; align-items:center; gap:10px; justify-content:center;
+      padding:12px 18px; font-weight:700; border-radius:28px;
+      cursor:pointer; border:none; width:100%;
+      color:#fff; margin:10px 0; box-shadow:0 2px 0 rgba(0,0,0,0.03);
+    }
+    .btn.google{background:var(--blue)}
+    .btn.clever{background:#3949ab}
+    .btn.email{background:var(--green)}
+    .btn.educator{background:#2ca44a}
+    .btn.student{background:var(--indigo)}
+    .btn.parent{background:var(--orange)}
+    .btn.secondary{background:#f1f1f1; color:#333; border:1px solid #e6e6e6}
+
+    .divider{display:flex; align-items:center; gap:12px; margin:14px 0}
+    .line{height:1px; background:#eee; flex:1}
+
+    .muted-pill{
+      background:#f3f4f6; padding:6px 12px; border-radius:999px; font-size:13px;
+      color:#555;
+    }
+
+    .form-row{margin:12px 0}
+    .input{
+      width:100%; padding:10px 12px; border-radius:6px; border:1px solid #ddd; font-size:15px;
+    }
+    label{display:block; font-size:14px; margin-bottom:6px}
+    .checkbox-row{display:flex; align-items:center; gap:8px; margin:10px 0}
+    .link{color:#0b6bff; text-decoration:underline; cursor:pointer}
+
+    .view{display:none}
+    .view.active{display:block}
+
+    .small-muted{font-size:13px; color:#666; margin-top:8px; text-align:center}
+
+    @media (max-width:600px){
+      .card{margin-top:20px; padding:16px}
+      header{left:10px; top:8px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <svg width="36" height="20" viewBox="0 0 36 20" style="transform:translateY(2px)">
+      <rect width="6" height="14" rx="3" fill="#1f9b63"></rect>
+      <rect x="10" y="3" width="6" height="11" rx="3" fill="#f7b500"></rect>
+      <rect x="20" y="6" width="6" height="8" rx="3" fill="#3b82f6"></rect>
+    </svg>
+    APSU-DASS
+  </header>
+
+  <div class="container">
+    <!-- MAIN LOGIN CHOICE -->
+    <div id="choiceCard" class="card view active">
+      <h2 id="choiceTitle">Log In</h2>
+      <p class="small" id="choiceSub">Don't have an account? <span class="link" id="toSignUp">Sign Up</span></p>
+
+      <button class="btn google" id="loginGoogle">G ⮕ Login with Google</button>
+      <button class="btn clever" id="loginClever">C ⮕ Login with Clever</button>
+
+      <div class="divider">
+        <div class="line"></div>
+        <div class="muted-pill">Teacher/student</div>
+        <div class="line"></div>
+      </div>
+
+      <button class="btn email" id="loginEmail">✉ Login with Email</button>
+    </div>
+
+    <!-- SIGNUP OPTIONS -->
+    <div id="signUpCard" class="card view">
+      <h2>Sign Up</h2>
+      <p class="small">Already have an account? <span class="link" id="toLogin">Login</span></p>
+
+      <button class="btn educator" data-role="educator">🔒 Educators</button>
+      <button class="btn student" data-role="student">🎓 Students</button>
+      <button class="btn parent" data-role="parent">👥 Teacher</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginFormCard" class="card view">
+      <h2>Login</h2>
+      <p class="small">Enter your registered email and password to continue.</p>
+
+      <div class="form-row">
+        <label for="loginEmailInput">Email</label>
+        <input id="loginEmailInput" class="input" type="email" placeholder="you@example.com" />
+      </div>
+      <div class="form-row">
+        <label for="loginPasswordInput">Password</label>
+        <input id="loginPasswordInput" class="input" type="password" placeholder="Enter your password" />
+      </div>
+
+      <p style="text-align:right;margin:0;">
+        <span class="link" id="forgotPassword">Forgot Password?</span>
+      </p>
+
+      <div style="display:flex; gap:10px; margin-top:12px;">
+        <button class="btn google" id="loginSubmit">Login</button>
+        <button class="btn secondary" id="backFromLogin">Back</button>
+      </div>
+
+      <p class="small-muted" id="loginMsg"></p>
+    </div>
+
+    <!-- FORGOT PASSWORD -->
+    <div id="forgotCard" class="card view">
+      <h2>Forgot Password</h2>
+      <p class="small">Enter your email to receive a password reset link.</p>
+      <div class="form-row">
+        <label for="resetEmail">Email</label>
+        <input id="resetEmail" class="input" type="email" placeholder="yourname@gmail.com" />
+      </div>
+      <div style="display:flex; gap:10px; margin-top:12px;">
+        <button class="btn google" id="sendReset">Send Reset Link</button>
+        <button class="btn secondary" id="backFromReset">Back</button>
+      </div>
+      <p class="small-muted" id="resetMsg"></p>
+    </div>
+
+    <!-- CREATE ACCOUNT -->
+    <div id="gmailCreateCard" class="card view">
+      <h2>Create Google Account</h2>
+      <p class="small">Enter your details below to create your Schoolytics account.</p>
+
+      <form id="createForm" onsubmit="return false;">
+        <div class="form-row">
+          <label for="newEmail">Email (Gmail)</label>
+          <input id="newEmail" class="input" type="email" placeholder="yourname@gmail.com" required />
+        </div>
+
+        <div class="form-row">
+          <label for="newPassword">Create Password</label>
+          <input id="newPassword" class="input" type="password" placeholder="Create a strong password" required minlength="6" />
+        </div>
+
+        <div class="form-row">
+          <label for="confirmPassword">Confirm Password</label>
+          <input id="confirmPassword" class="input" type="password" placeholder="Confirm password" required />
+        </div>
+
+        <div class="checkbox-row">
+          <input id="agreeTerms" type="checkbox" />
+          <label for="agreeTerms">I accept the <span class="link" id="showTnC">Terms & Conditions</span></label>
+        </div>
+
+        <div style="margin-top:10px; display:flex; gap:10px;">
+          <button id="createAccountBtn" class="btn google" type="submit">Submit & Create Account</button>
+          <button id="createCancel" class="btn secondary">Cancel</button>
+        </div>
+      </form>
+
+      <p class="small-muted" style="margin-top:10px">
+        Read our <a href="#" id="privacyLink" class="link">Privacy Policy</a>.
+      </p>
+
+      <p class="small-muted" id="createMsg"></p>
+    </div>
+
+    <!-- TERMS & CONDITIONS -->
+    <div id="tncModal" class="card view" style="max-width:700px; margin-top:20px;">
+      <h2>Terms & Conditions</h2>
+      <div style="height:180px; overflow:auto; border:1px solid #eee; padding:12px; border-radius:6px; background:#fafafa; margin:10px 0">
+        <p>This is a demo Terms & Conditions text. In production, replace this with real legal content.</p>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn google" id="tncAccept">Accept</button>
+        <button class="btn secondary" id="tncClose">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const byId = id => document.getElementById(id);
+    const views = ['choiceCard','signUpCard','loginFormCard','forgotCard','gmailCreateCard','tncModal'];
+    function show(v){ views.forEach(id => byId(id).classList.toggle('active', id===v)); window.scrollTo({top:0}); }
+
+    // navigation
+    byId('toSignUp').onclick = ()=>show('signUpCard');
+    byId('toLogin').onclick = ()=>show('choiceCard');
+    byId('loginEmail').onclick = ()=>show('loginFormCard');
+    byId('backFromLogin').onclick = ()=>show('choiceCard');
+
+    // forgot password
+    byId('forgotPassword').onclick = ()=>show('forgotCard');
+    byId('backFromReset').onclick = ()=>show('loginFormCard');
+    byId('sendReset').onclick = ()=>{
+      const email=byId('resetEmail').value.trim();
+      const msg=byId('resetMsg');
+      if(!email){msg.textContent='Please enter your email.'; msg.style.color='#c00';return;}
+      msg.textContent=`A password reset link has been sent to ${email}. (Demo only)`; msg.style.color='#0a7';
+    };
+
+    // login
+    byId('loginSubmit').onclick = ()=>{
+      const e=byId('loginEmailInput').value.trim();
+      const p=byId('loginPasswordInput').value;
+      const msg=byId('loginMsg');
+      if(!e||!p){msg.textContent='Both email and password are required.';msg.style.color='#c00';return;}
+      msg.textContent=`Login successful (demo). Welcome, ${e}!`;msg.style.color='#0a7';
+    };
+
+    // sign up
+    document.querySelectorAll('#signUpCard .btn').forEach(b=>b.onclick=(ev)=>{
+      const role=ev.currentTarget.dataset.role;
+      show('gmailCreateCard');
+      byId('createMsg').textContent=`Signing up as: ${role}.`;
+    });
+    byId('loginGoogle').onclick = ()=>show('gmailCreateCard');
+    byId('loginClever').onclick = ()=>alert('Clever login simulated.');
+    byId('createCancel').onclick = ()=>show('choiceCard');
+    byId('createAccountBtn').onclick = (ev)=>{
+      ev.preventDefault();
+      const e=byId('newEmail').value.trim();
+      const p=byId('newPassword').value;
+      const c=byId('confirmPassword').value;
+      const a=byId('agreeTerms').checked;
+      const msg=byId('createMsg');
+      if(!e||!/^[^@]+@[^@]+\.[^@]+$/.test(e)){msg.textContent='Enter a valid email.';msg.style.color='#c00';return;}
+      if(p.length<6){msg.textContent='Password must be at least 6 characters.';msg.style.color='#c00';return;}
+      if(p!==c){msg.textContent='Passwords do not match.';msg.style.color='#c00';return;}
+      if(!a){msg.textContent='Please accept Terms & Conditions.';msg.style.color='#c00';return;}
+      msg.textContent=`Account created for ${e} (demo).`;msg.style.color='#0a7';
+      setTimeout(()=>show('loginFormCard'),1000);
+    };
+
+    // TnC + Privacy
+    byId('showTnC').onclick=()=>show('tncModal');
+    byId('tncClose').onclick=()=>show('gmailCreateCard');
+    byId('tncAccept').onclick=()=>{byId('agreeTerms').checked=true;show('gmailCreateCard');};
+    byId('privacyLink').onclick=e=>{e.preventDefault();alert('Privacy Policy demo link.');};
+  </script>
+</body>
+</html>

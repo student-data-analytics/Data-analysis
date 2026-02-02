@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Data Analytics for Student Success (DASS) Final Report</title>
+  <style>
+    /* --- Basic layout & typography --- */
+    :root{
+      --max-width:900px;
+      --body-font: "Times New Roman", Times, serif;
+      --heading-font: Georgia, "Times New Roman", serif;
+      --accent:#1f4e79;
+    }
+    html,body{
+      margin:0;
+      padding:0;
+      font-family: var(--body-font);
+      color:#111;
+      background:#f8f8f8;
+      -webkit-font-smoothing:antialiased;
+    }
+    .page{
+      max-width:var(--max-width);
+      margin:30px auto;
+      background:#fff;
+      padding:48px 56px;
+      box-shadow:0 4px 18px rgba(0,0,0,0.06);
+      border-radius:6px;
+    }
+    header.report-header{
+      text-align:center;
+      margin-bottom:24px;
+    }
+    .title{
+      font-size:26px;
+      font-family:var(--heading-font);
+      color:var(--accent);
+      margin-bottom:6px;
+      letter-spacing:0.2px;
+    }
+    .subtitle{
+      font-size:13px;
+      margin-bottom:18px;
+      color:#333;
+    }
+    .meta{ font-size:13px; color:#444; margin-bottom:28px; }
+    hr.sep{ border:none; border-top:1px solid #e3e3e3; margin:22px 0 28px 0; }
+
+    /* --- Table of contents --- */
+    .toc{ margin-bottom:20px; }
+    .toc h3{ margin:0 0 12px 0; color:var(--accent); }
+    .toc ol{ padding-left:20px; color:#333; }
+
+    /* --- Section styles --- */
+    section.chapter{ page-break-after:always; }
+    section.chapter:last-of-type{ page-break-after:auto; }
+
+    h2.chapter-title{
+      font-size:20px;
+      margin:6px 0 12px 0;
+      color:var(--accent);
+      font-family:var(--heading-font);
+    }
+    h3{ font-size:16px; margin:12px 0 8px 0; color:#1a1a1a; }
+    p{ line-height:1.6; margin:8px 0; text-align:justify; }
+
+    .figure{
+      margin:14px 0;
+      text-align:center;
+    }
+    .figure img{
+      max-width:100%;
+      height:auto;
+      border:1px dashed #bbb;
+      background:#f5f5f5;
+      padding:6px;
+    }
+    .figcaption{ font-size:12px; color:#555; margin-top:6px; }
+
+    /* code block */
+    pre.code{
+      background:#f4f7fb;
+      padding:12px;
+      border-radius:4px;
+      overflow:auto;
+      font-family:monospace;
+      font-size:12px;
+      border:1px solid #e6eefb;
+    }
+
+    /* Footer */
+    footer{ text-align:center; margin-top:28px; font-size:12px; color:#666; }
+
+    /* --- Print styles --- */
+    @media print{
+      body{ background:#fff; }
+      .page{ box-shadow:none; border:none; margin:0; max-width:100%; padding:24mm; }
+      section.chapter{ page-break-after:always; }
+      footer{ position:fixed; bottom:12mm; left:0; right:0; }
+    }
+
+    /* --- Page-break helper (force approximate pagination) --- */
+    .page-break { display:block; height:1px; margin:0; padding:0; page-break-after:always; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="report-header">
+      <div class="title">Data Analytics for Student Success (DASS)</div>
+      <div class="subtitle">Analyzing Student Data for Smarter Education Decisions</div>
+      <div class="meta">
+        Developed by: Amit Kewat, Vivek Singh &amp; Mahesh Saket — APS University — 2026
+      </div>
+      <hr class="sep" />
+    </header>
+
+    <!-- Cover / Acknowledgement / Abstract -->
+    <section class="chapter" id="cover">
+      <h2 class="chapter-title">Acknowledgement</h2>
+      <p>We would like to express our sincere gratitude to our project guide and faculty members of APS University for their valuable support, guidance, and encouragement throughout the development of this project titled “Data Analytics for Student Success (DASS)”. Their constructive suggestions and continuous motivation have been a great source of inspiration during this work. We would also like to thank our friends and family members for their help and cooperation in completing this project successfully.</p>
+
+      <h2 class="chapter-title">Abstract</h2>
+      <p>The project “Data Analytics for Student Success (DASS)” is designed to analyze, visualize, and interpret student and institutional data effectively. The system accepts raw data (in Excel or CSV format), processes it into readable tables, and provides dynamic graphical analysis using charts and visual indicators. This project helps educators, administrators, and learners gain meaningful insights from large datasets—such as performance tracking, result prediction, and comparative analysis. The web-based interface is built using HTML, CSS, and JavaScript and supports essential data operations like upload, filter, search, edit, and visualization. The system also integrates external data resources such as Kaggle datasets for real-world analytics and Adda247 for educational content. DASS serves as a bridge between data and decision-making in the academic sector.</p>
+
+      <div class="figure">
+        <!-- Replace INSERT_IMAGE_URL_HERE with your image URL -->
+         <img src="Screenshot 2026-02-01 111501.png" alt="Insert: Cover / Home screenshot" />
+         <img src="Screenshot 2026-02-01 114235.png" alt="Insert: Cover / Home screenshot" />
+         <img src="Screenshot 2026-02-01 114319.png" alt="Insert: Cover / Home screenshot" />
+         <img src="Screenshot 2026-02-01 114252.png" alt="Insert: Cover / Home screenshot" />
+        <img src="Screenshot 2026-02-01 114301.png" alt="Insert: Cover / Home screenshot" />
+        <div class="figcaption">Figure: Home / Upload page screenshot. (Insert URL into the img src.)</div>
+      </div>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- Table of contents -->
+    <section class="chapter" id="toc">
+      <h2 class="chapter-title">Table of Contents</h2>
+      <div class="toc">
+        <ol>
+          <li>Introduction</li>
+          <li>System Overview</li>
+          <li>System Design</li>
+          <li>Module Description</li>
+          <li>Implementation</li>
+          <li>Results & Analysis</li>
+          <li>Applications</li>
+          <li>Conclusion</li>
+          <li>Future Scope</li>
+          <li>References & Appendix</li>
+        </ol>
+      </div>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- CHAPTER 1 -->
+    <section class="chapter" id="introduction">
+      <h2 class="chapter-title">Chapter 1 – Introduction</h2>
+
+      <h3>1.1 Overview</h3>
+      <p>Data Analytics plays a crucial role in understanding, interpreting, and improving performance in education and other domains. The purpose of the DASS project is to provide an intuitive platform for analyzing structured datasets and presenting them in an interactive graphical format. The application accepts tabular data (Excel/CSV) and helps convert raw values into understandable visual insights for stakeholders.</p>
+
+      <h3>1.2 Objective</h3>
+      <p>The objectives of this project include: developing a web-based data analysis platform, allowing uploading and visualization of Excel or CSV files, generating graphs and charts dynamically based on user selection, enabling searching, updating, and cleaning of uploaded data, and integrating external analytical and learning resources.</p>
+
+      <h3>1.3 Motivation</h3>
+      <p>The increasing volume of educational data requires tools that can analyze results efficiently. Manual analysis is time-consuming and error-prone. DASS automates the analytical process to enhance decision-making, enabling teachers and administrators to act on reliable insights faster.</p>
+
+      <h3>1.4 Scope</h3>
+      <p>The system can be used in education, business, surveys, and research to analyze tabular datasets. The project can be extended for predictive analytics, AI-based forecasting, and cloud-based storage for multi-user scenarios.</p>
+
+      <div class="figure">
+        <img src="Screenshot 2026-02-01 112837.png" alt="Insert: Intro screenshot or flow" />
+        <img src="Screenshot 2026-02-01 112900.png" alt="Insert: Intro screenshot or flow" />
+        <img src="Screenshot 2026-02-01 112927.png" alt="Insert: Intro screenshot or flow" />
+        <div class="figcaption">Figure: System introduction / flow screenshot placeholder.</div>
+      </div>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- CHAPTER 2 -->
+    <section class="chapter" id="system-overview">
+      <h2 class="chapter-title">Chapter 2 – System Overview</h2>
+
+      <h3>2.1 System Modules</h3>
+      <p>The system is divided into the following modules:</p>
+      <ol>
+        <li><strong>Home / Upload Module</strong>: Upload data files and initialize analysis.</li>
+        <li><strong>Data Display Module</strong>: View, filter, and edit tabular data.</li>
+        <li><strong>Analytics Module</strong>: Generate charts like bar, pie, or line graphs.</li>
+        <li><strong>Mock Test Module</strong>: Evaluate student knowledge and performance.</li>
+        <li><strong>Resources Module</strong>: Access external resources such as Kaggle.</li>
+        <li><strong>Export Module</strong>: Download and print analyzed data.</li>
+      </ol>
+
+      <h3>2.2 Technology Stack</h3>
+      <p>Frontend: HTML5, CSS3, JavaScript. Data Source: Excel/CSV files parsed on client side. Visualization: HTML5 Canvas or libraries such as Chart.js. Platform: Browser-based application for ease of use and portability.</p>
+
+      <h3>2.3 Key Features</h3>
+      <p>Key features include file upload and automatic table generation, real-time editing and filtering, interactive graphs and chart downloads, integration with external data repositories, and resources for further learning.</p>
+
+      <div class="figure">
+        <img src="Screenshot 2026-02-01 114049.png" alt="Insert: System overview screenshot" />
+        <img src="Screenshot 2026-02-01 114104.png" alt="Insert: System overview screenshot" />
+        <div class="figcaption">Figure: System overview / module mapping.</div>
+      </div>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- CHAPTER 3 -->
+    <section class="chapter" id="system-design">
+      <h2 class="chapter-title">Chapter 3 – System Design</h2>
+
+      <h3>3.1 Architecture Diagram</h3>
+      <p>The architecture is layered: User Interface Layer (HTML/CSS), Processing Layer (JavaScript), and Visualization Layer (Canvas/charting). The browser handles file parsing and renders tables and charts directly for immediate feedback.</p>
+
+      <div class="figure">
+        <img src="Screenshot 2026-02-01 114338.png" alt="Insert: Architecture diagram" />
+        <div class="figcaption">Figure: Architecture diagram placeholder.</div>
+      </div>
+
+      <h3>3.2 Data Flow</h3>
+      <p>Typical data flow: Upload Excel/CSV → Parse to HTML table → Apply filters and cleaning → Generate charts → Save/Download/Print outputs. Data persists in the browser session until the user clears or uploads a new file.</p>
+
+      <h3>3.3 Data Model</h3>
+      <p>Each record typically contains fields such as Student ID, Name, Subject scores, Total, Grade, Attendance, and Result (Pass/Fail). The flexible schema allows extra columns for project-specific metrics (motivation score, time-spent, etc.).</p>
+
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- CHAPTER 4 -->
+    <section class="chapter" id="module-description">
+      <h2 class="chapter-title">Chapter 4 – Module Description</h2>
+
+      <h3>4.1 Home / Upload Module</h3>
+      <p>Users upload data via a simple file-input. The uploader supports Excel (.xlsx) and CSV (.csv). On upload, the file is parsed and displayed in a responsive HTML table for review.</p>
+      <div class="figure">
+        <img src="Screenshot 2026-02-01 114352.png" alt="Insert: Upload module screenshot" />
+        <div class="figcaption">Figure: Upload module placeholder.</div>
+      </div>
+
+      <h3>4.2 Data Table Module</h3>
+      <p>The data table provides clear column headers, row selection, and inline editing. Users can Add, Update, Delete records, and filter using column-specific search. Buttons for Print and Export are provided near the table controls.</p>
+      <div class="figure">
+        <img src="Screenshot 2026-02-01 114148.png" alt="Insert: Table module screenshot" />
+        <div class="figcaption">Figure: Data table with CRUD operations (placeholder).</div>
+      </div>
+
+      <h3>4.3 Graphical Analytics Module</h3>
+      <p>Selected columns can be converted into charts. Categorical columns (e.g., Result) map well to Pie Charts; numerical columns (e.g., marks) work with Bar or Line charts. Chart export (PNG/PDF) and print functionality are included.</p>
+      <div class="figure">
+        <img src="Screenshot 2026-02-01 114204.png" alt="Insert: Chart module screenshot" />
+        <div class="figcaption">Figure: Chart generation placeholder (e.g., Pass/Fail pie chart).</div>
+      </div>
+
+      <h3>4.4 Mock Test Module</h3>
+      <p>The mock test module provides quizzes across subjects. Student responses are evaluated automatically and results can be added back into the data table to analyze performance trends over time.</p>
+      <div class="figure">
+        <img src="Screenshot 2026-02-01 114352.png" alt="Insert: Mock test screenshot" />
+        <div class="figcaption">Figure: Mock test module placeholder.</div>
+      </div>
+
+      <h3>4.5 Resources Module</h3>
+      <p>The resources section contains links to Kaggle for raw datasets and Adda247 for current affairs and study material. These external links facilitate real-data experimentation and learning.</p>
+      <div class="figure">
+        <img src="Screenshot 2026-02-01 114148.png" alt="Insert: Resources screenshot" />
+        <div class="figcaption">Figure: Resources links placeholder (Kaggle, Adda247).</div>
+      </div>
+
+      <h3>4.6 Export & Reporting</h3>
+      <p>Once analysis is complete, users can export tables and charts. The export module supports printing and saving results for presentations or record-keeping.</p>
+      <div class="figure">
+        <img src="Screenshot 2026-02-01 114204.png" alt="Insert: Export buttons screenshot" />
+        
+        <img src="Screenshot 2026-02-01 114219.png" alt="Insert: Export buttons screenshot" />
+        <div class="figcaption">Figure: Export and download options placeholder.</div>
+      </div>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- CHAPTER 5 -->
+    <section class="chapter" id="implementation">
+      <h2 class="chapter-title">Chapter 5 – Implementation</h2>
+
+      <h3>5.1 Development Tools</h3>
+      <p>Development was carried out using Visual Studio Code and browser-based testing. The front-end uses HTML5 semantics for accessibility, CSS3 for presentation, and vanilla JavaScript for interactivity and data handling. Optionally, chart libraries like Chart.js or Chartist.js can be integrated for advanced visuals.</p>
+
+      <h3>5.2 Implementation Steps</h3>
+      <ol>
+        <li>Design static HTML structure for layout and content.</li>
+        <li>Implement JavaScript for file parsing (CSV/XLSX) and table rendering.</li>
+        <li>Add filtering, search, and CRUD operations via DOM manipulation.</li>
+        <li>Integrate charts and add export/print capabilities.</li>
+        <li>Test across browsers and improve responsiveness.</li>
+      </ol>
+
+      <h3>5.3 Sample Code Snippet</h3>
+      <pre class="code">
+/* Example: Simple CSV parser & table render (JS pseudocode)
+const fileInput = document.getElementById('fileInput');
+fileInput.onchange = (e) =&gt; {
+  const file = e.target.files[0];
+  // Use FileReader or XLSX library to parse
+  // Convert rows into HTML table rows
+  // Append to #dataTable tbody
+};
+      </pre>
+
+      <div class="figure">
+        <img src="INSERT_IMAGE_URL_HERE" alt="Insert: Code or implementation screenshot" />
+        <div class="figcaption">Figure: Code snippet / implementation placeholder.</div>
+      </div>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- CHAPTER 6 -->
+    <section class="chapter" id="results">
+      <h2 class="chapter-title">Chapter 6 – Results & Analysis</h2>
+
+      <h3>6.1 Data Visualization Results</h3>
+      <p>Uploaded data is displayed in structured tables and converted into charts for interpretation. Visualizations such as pass/fail distribution, average marks per subject, and top/bottom performers are straightforward to generate and export for reporting.</p>
+
+      <h3>6.2 Example Analyses</h3>
+      <p><strong>Pass/Fail Distribution:</strong> A pie chart representing pass vs. fail counts helps quickly identify overall success rate. <br/>
+         <strong>Subject-wise Average:</strong> Bar charts show subject averages to identify strong and weak areas. <br/>
+         <strong>Top Performers:</strong> A sorted table or horizontal bar chart highlights top scoring students for reward or further study programs.</p>
+
+      <div class="figure">
+        <img src="INSERT_IMAGE_URL_HERE" alt="Insert: Results chart screenshot" />
+        <div class="figcaption">Figure: Results and analysis chart placeholder.</div>
+      </div>
+
+      <h3>6.3 Advantages</h3>
+      <p>The DASS application reduces manual workload, increases accuracy, and enables data-driven decision making for educators and administrators. Visual outputs simplify communication and reporting.</p>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- CHAPTER 7 -->
+    <section class="chapter" id="applications">
+      <h2 class="chapter-title">Chapter 7 – Applications</h2>
+
+      <p>DASS can be used for academic result analysis, institutional performance evaluation, research data analytics, employee/survey data insights, and mock test result analytics. The same architecture supports general-purpose tabular data for business or HR use-cases.</p>
+
+      <div class="figure">
+        <img src="Screenshot 2026-02-01 113957.png" alt="Insert: Applications screenshot" />
+         <img src="Screenshot 2026-02-01 114013.png" alt="Insert: Applications screenshot" />
+        <div class="figcaption">Figure: Application scenarios placeholder.</div>
+      </div>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- CHAPTER 8 -->
+    <section class="chapter" id="conclusion">
+      <h2 class="chapter-title">Chapter 8 – Conclusion</h2>
+
+      <p>The project DASS successfully demonstrates an accessible approach to student data analytics. By combining straightforward upload, real-time table rendering, and dynamic charting, DASS helps educators transform raw data into actionable insights.</p>
+
+      <h3>Key Takeaways</h3>
+      <ul>
+        <li>Easy upload of Excel/CSV into the browser environment.</li>
+        <li>Inline data editing and cleaning before analysis.</li>
+        <li>Multiple charting options with export capabilities.</li>
+        <li>Integration possibilities with external datasets and resources.</li>
+      </ul>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- CHAPTER 9 -->
+    <section class="chapter" id="future-scope">
+      <h2 class="chapter-title">Chapter 9 – Future Scope</h2>
+
+      <p>Future improvements include cloud integration (Firebase, AWS), machine learning modules for performance prediction, multi-user authentication, and a responsive mobile interface. Adding analytics dashboards with time-series trend analysis and alerts would enhance proactive intervention strategies.</p>
+
+      <div class="figure">
+        <img src="INSERT_IMAGE_URL_HERE" alt="Insert: Future scope screenshot" />
+        <div class="figcaption">Figure: Future feature mockup placeholder.</div>
+      </div>
+    </section>
+
+    <div class="page-break"></div>
+
+    <!-- CHAPTER 10 -->
+    <section class="chapter" id="references-appendix">
+      <h2 class="chapter-title">Chapter 10 – References & Appendix</h2>
+
+      <h3>References</h3>
+      <ol>
+        <li>Kaggle — https://www.kaggle.com</li>
+        <li>Adda247 — https://hindi.currentaffairs.adda247.com</li>
+        <li>APS University official portal</li>
+        <li>HTML, CSS, JavaScript documentation and W3Schools tutorials</li>
+      </ol>
+
+      <h3>Appendix A — Sample Table</h3>
+      <p>Sample table of uploaded data (example): StudentID | Name | Math | Science | English | Total | Result.</p>
+      <div class="figure">
+        <img src="INSERT_IMAGE_URL_HERE" alt="Insert: Sample table screenshot" />
+        <div class="figcaption">Figure: Sample uploaded table placeholder.</div>
+      </div>
+
+      <h3>Appendix B — Code Snippets</h3>
+      <pre class="code">
+// Example: pseudo-JS to parse CSV and render table (use SheetJS/XLSX for xlsx)
+function parseCSV(text){
+  const rows = text.split('\n').map(r =&gt; r.split(','));
+  // build table DOM...
+}
+      </pre>
+
+      <h3>Appendix C — Screenshot Gallery</h3>
+      <p>Insert screenshots for Home, Data Table, Charts, Mock Test, Resources, Export module.</p>
+
+      <div class="figure">
+        <img src="INSERT_IMAGE_URL_HERE" alt="Insert: Screenshot gallery 1" />
+        <div class="figcaption">Figure: Screenshot gallery placeholder 1.</div>
+      </div>
+      <div class="figure">
+        <img src="INSERT_IMAGE_URL_HERE" alt="Insert: Screenshot gallery 2" />
+        <div class="figcaption">Figure: Screenshot gallery placeholder 2.</div>
+      </div>
+    </section>
+
+    <footer>
+      APS University — Data Analytics for Student Success (DASS) — 2026
+    </footer>
+  </div>
+
+  <!-- --- Usage notes --- -->
+  <!--
+    HOW TO USE:
+    1) Save this code as DASS_Report.html and open in a browser.
+    2) Replace each src="INSERT_IMAGE_URL_HERE" with the actual URL to your image file (for example: https://yourdomain.com/images/home.png).
+    3) Crop/resize images on your hosting side if needed. The img will adapt to page width.
+    4) For printing: File -> Print -> choose margins and orientation (Portrait recommended). Use browser 'Save as PDF' to create printable PDF.
+  -->
+</body>
+</html>
