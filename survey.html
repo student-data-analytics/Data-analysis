@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<title>Student Survey System</title>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+*{ box-sizing:border-box; }
+body{
+    margin:0;
+    font-family:Segoe UI, Arial;
+    background:linear-gradient(135deg,#74ebd5,#9face6);
+}
+.container{
+    width:85%;
+    margin:30px auto;
+    background:#fff;
+    padding:30px;
+    border-radius:12px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.2);
+}
+h1{text-align:center;}
+h2{
+    background:#4b6cb7;
+    color:#fff;
+    padding:10px;
+    border-radius:6px;
+}
+.question{ margin:15px 0; }
+label{ font-weight:600; display:block; margin-bottom:6px; }
+input,select,textarea{
+    width:100%;
+    padding:10px;
+    border-radius:6px;
+    border:1px solid #ccc;
+}
+button{
+    background:#4b6cb7;
+    color:#fff;
+    border:none;
+    padding:12px 30px;
+    border-radius:25px;
+    cursor:pointer;
+}
+button:hover{ background:#182848; }
+.center{ text-align:center; margin-top:20px; }
+.hidden{ display:none; }
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+}
+th,td{
+    border:1px solid #ccc;
+    padding:8px;
+    text-align:center;
+}
+th{ background:#4b6cb7; color:#fff; }
+canvas{ margin-top:20px; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>📘 Student Detailed Survey Form</h1>
+
+<form id="surveyForm">
+
+<h2>Basic Information</h2>
+
+<div class="question">
+<label>Student ID / Enrollment No.</label>
+<input type="text" id="studentId" required>
+</div>
+
+<div class="question">
+<label>Name</label>
+<input type="text" id="name" required>
+</div>
+
+<div class="question">
+<label>Class/Semester</label>
+<input type="text" id="className" required>
+</div>
+
+<div class="question">
+<label>Admission Year</label>
+<input type="number" id="admissionYear" min="2000" max="2030" required>
+</div>
+
+<div class="question">
+<label>Mobile Number</label>
+<input type="text" id="mobile" required pattern="[0-9]{10}">
+</div>
+
+<div class="question">
+<label>Age</label>
+<input type="number" id="age" min="16" max="25">
+</div>
+
+<div class="question">
+<label>Gender</label>
+<select id="gender">
+<option>Male</option>
+<option>Female</option>
+<option>Other</option>
+</select>
+</div>
+
+<h2>Study Details</h2>
+
+<div class="question">
+<label>Medium</label>
+<select id="medium">
+<option>Hindi</option>
+<option>English</option>
+<option>Hindi + English</option>
+</select>
+</div>
+
+<div class="question">
+<label>Course Name</label>
+<input type="text" id="courseName" required>
+</div>
+
+<div class="question">
+<label>Branch Name</label>
+<input type="text" id="branchName" required>
+</div>
+
+<div class="question">
+<label>Institute Name</label>
+<input type="text" id="instituteName" required>
+</div>
+
+<div class="question">
+<label>Daily Study Hours</label>
+<select id="hours">
+<option>1-2 Hours</option>
+<option>3-4 Hours</option>
+<option>5-6 Hours</option>
+<option>7-8Hours</option>
+<option>8-10 Hours</option>
+<option>10-12 Hours</option>
+<option>12+ Hours</option>
+</select>
+</div>
+
+<div class="question">
+<label>Study Method</label>
+<select id="method">
+<option>Books</option>
+<option>Online Videos</option>
+<option>Coaching</option>
+<option>Self Study</option>
+<option>Self Study+Coaching</option>
+<option>Self Study+book+Coaching</option>
+<option>Self Study+Online Video</option>
+</select>
+</div>
+
+<div class="question">
+<label>Exam Stress Level</label>
+<select id="stress">
+<option>High</option>
+<option>Medium</option>
+<option>Low</option>
+</select>
+</div>
+
+<div class="question">
+<label>Last Exam Percentage/CGPA/SGPA</label>
+<input type="number" id="percentage" min="0" max="100">
+</div>
+
+<div class="center">
+<button type="submit">Submit Survey</button>
+</div>
+
+</form>
+
+<hr>
+
+<div class="center">
+<button onclick="askPassword()">View Dashboard (Admin)</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="hidden">
+
+<h2>📊 Survey Dashboard</h2>
+<p><b>Total Students:</b> <span id="totalCount">0</span></p>
+
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>ID</th>
+<th>Name</th>
+<th>Class</th>
+<th>Year</th>
+<th>Mobile</th>
+<th>Age</th>
+<th>Gender</th>
+<th>Medium</th>
+<th>Course</th>
+<th>Branch</th>
+<th>Institute</th>
+<th>Hours</th>
+<th>Method</th>
+<th>%</th>
+<th>Stress</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+
+<div class="center">
+    <input type="number" id="deleteRowNo" placeholder="Enter Row No. to delete" style="width: 40%; padding:10px; border-radius:6px; border:1px solid #ccc;">
+    <button onclick="deleteRowByNumber()">Delete Row</button>
+</div>
+
+<h2>📈 Graph System</h2>
+
+<div class="question">
+<label>Select Column</label>
+<select id="columnSelect" onchange="drawGraph()">
+<option value="">-- Select Column --</option>
+<option value="hours">Study Hours</option>
+<option value="method">Study Method</option>
+<option value="gender">Gender</option>
+<option value="stress">Stress</option>
+<option value="medium">Medium</option>
+<option value="courseName">Course Name</option>
+<option value="branchName">Branch Name</option>
+<option value="instituteName">Institute Name</option>
+<option value="percentage">Percentage</option>
+</select>
+</div>
+
+<canvas id="surveyChart" height="120"></canvas>
+
+<div class="center">
+    <button id="downloadBtn" class="hidden" onclick="downloadGraph()">Download Graph</button>
+</div>
+
+</div>
+
+</div>
+
+<script>
+const ADMIN_PASSWORD = "admin123";
+let chart;
+
+function askPassword(){
+    let pass = prompt("Enter Dashboard Password:");
+    if(pass === null) return;
+    if(pass === ADMIN_PASSWORD){
+        document.getElementById("dashboard").classList.remove("hidden");
+        loadData();
+    }else{
+        alert("Wrong Password!");
+    }
+}
+
+document.getElementById("surveyForm").addEventListener("submit", function(e){
+    e.preventDefault();
+
+    const data = {
+        studentId: document.getElementById("studentId").value,
+        name: document.getElementById("name").value,
+        className: document.getElementById("className").value,
+        admissionYear: document.getElementById("admissionYear").value,
+        mobile: document.getElementById("mobile").value,
+        age: document.getElementById("age").value,
+        gender: document.getElementById("gender").value,
+        medium: document.getElementById("medium").value,
+        courseName: document.getElementById("courseName").value,
+        branchName: document.getElementById("branchName").value,
+        instituteName: document.getElementById("instituteName").value,
+        hours: document.getElementById("hours").value,
+        method: document.getElementById("method").value,
+        percentage: document.getElementById("percentage").value,
+        stress: document.getElementById("stress").value
+    };
+
+    let surveys = JSON.parse(localStorage.getItem("surveys")) || [];
+    surveys.push(data);
+    localStorage.setItem("surveys", JSON.stringify(surveys));
+
+    alert("Survey Submitted Successfully!");
+    this.reset();
+});
+
+function loadData(){
+    let surveys = JSON.parse(localStorage.getItem("surveys")) || [];
+    document.getElementById("totalCount").innerText = surveys.length;
+    document.getElementById("tableBody").innerHTML = "";
+
+    surveys.forEach((s, i) => {
+        document.getElementById("tableBody").innerHTML += `
+        <tr>
+            <td>${i+1}</td>
+            <td>${s.studentId}</td>
+            <td>${s.name}</td>
+            <td>${s.className}</td>
+            <td>${s.admissionYear}</td>
+            <td>${s.mobile}</td>
+            <td>${s.age}</td>
+            <td>${s.gender}</td>
+            <td>${s.medium}</td>
+            <td>${s.courseName}</td>
+            <td>${s.branchName}</td>
+            <td>${s.instituteName}</td>
+            <td>${s.hours}</td>
+            <td>${s.method}</td>
+            <td>${s.percentage}</td>
+            <td>${s.stress}</td>
+        </tr>`;
+    });
+}
+
+function drawGraph(){
+    let column = document.getElementById("columnSelect").value;
+    if(!column) return;
+
+    let surveys = JSON.parse(localStorage.getItem("surveys")) || [];
+    if(surveys.length === 0){
+        alert("No data available!");
+        return;
+    }
+
+    let count = {};
+    surveys.forEach(s => {
+        let v = s[column];
+        count[v] = (count[v] || 0) + 1;
+    });
+
+    let labels = Object.keys(count);
+    let values = Object.values(count);
+
+    let ctx = document.getElementById("surveyChart").getContext("2d");
+    if(chart) chart.destroy();
+
+    chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: column.toUpperCase(),
+                data: values,
+                backgroundColor: ['#4b6cb7','#9face6','#74ebd5','#ff9a9e']
+            }]
+        }
+    });
+
+    document.getElementById("downloadBtn").classList.remove("hidden");
+}
+
+function downloadGraph(){
+    let canvas = document.getElementById("surveyChart");
+    let link = document.createElement("a");
+    link.download = "survey-graph.png";
+    link.href = canvas.toDataURL();
+    link.click();
+}
+
+function deleteRowByNumber(){
+    let rowNo = parseInt(document.getElementById("deleteRowNo").value);
+
+    if(isNaN(rowNo) || rowNo < 1){
+        alert("Please enter valid Row Number!");
+        return;
+    }
+
+    let surveys = JSON.parse(localStorage.getItem("surveys")) || [];
+
+    if(rowNo > surveys.length){
+        alert("Row number not found!");
+        return;
+    }
+
+    // Remove the specific row (index = rowNo-1)
+    surveys.splice(rowNo - 1, 1);
+
+    localStorage.setItem("surveys", JSON.stringify(surveys));
+    loadData();
+
+    if(chart) chart.destroy();
+    document.getElementById("downloadBtn").classList.add("hidden");
+
+    alert("Row deleted successfully!");
+    document.getElementById("deleteRowNo").value = "";
+}
+</script>
+
+</body>
+</html>
