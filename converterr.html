@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PDF to Excel Converter</title>
+
+<!-- SheetJS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- PDF.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+<style>
+body {
+    margin: 0;
+    height: 100vh;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+}
+
+.card {
+    background: #1e1e2f;
+    padding: 35px;
+    width: 360px;
+    border-radius: 15px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    text-align: center;
+    color: #fff;
+}
+
+h1 {
+    margin-bottom: 10px;
+}
+
+p {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+input {
+    display: none;
+}
+
+label {
+    display: block;
+    padding: 15px;
+    margin: 20px 0;
+    border: 2px dashed #aaa;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+button {
+    background: #4caf50;
+    border: none;
+    padding: 12px 25px;
+    color: #fff;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #43a047;
+}
+
+#status {
+    margin-top: 15px;
+    font-size: 14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+    <h1>PDF ➜ Excel</h1>
+    <p>Simple & Clean Converter</p>
+
+    <input type="file" id="pdfFile" accept="application/pdf">
+    <label for="pdfFile">Choose PDF File</label>
+
+    <button onclick="convertPDF()">Convert</button>
+    <div id="status"></div>
+</div>
+
+<script>
+async function convertPDF() {
+    const file = document.getElementById("pdfFile").files[0];
+    const status = document.getElementById("status");
+
+    if (!file) {
+        status.innerText = "Please select a PDF file ❌";
+        return;
+    }
+
+    status.innerText = "Reading PDF... ⏳";
+
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+    let textData = [];
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+       let rows = {};
+
+content.items.forEach(item => {
+    let y = Math.floor(item.transform[5]); // पंक्ति (Row)
+    let x = Math.floor(item.transform[4]); // कॉलम (Column)
+
+    if (!rows[y]) rows[y] = [];
+    rows[y].push({ x: x, text: item.str });
+});
+
+// पंक्तियाँ ऊपर से नीचे क्रम में
+Object.keys(rows)
+    .sort((a, b) => b - a)
+    .forEach(y => {
+        // कॉलम बाएँ से दाएँ
+        rows[y].sort((a, b) => a.x - b.x);
+        textData.push(rows[y].map(col => col.text));
+    });
+
+    }
+
+    // Create Excel
+    const worksheet = XLSX.utils.aoa_to_sheet(textData);
+    
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "PDF Data");
+
+    XLSX.writeFile(workbook, "output.xlsx");
+
+    status.innerText = "Excel downloaded ✅";
+}
+</script>
+
+</body>
+</html>

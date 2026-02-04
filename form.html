@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<title>Student Survey System</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*{ box-sizing:border-box; }
+body{ margin:0; font-family:Segoe UI, Arial; background:linear-gradient(135deg,#74ebd5,#9face6);}
+.container{ width:90%; max-width:1200px; margin:30px auto; background:#fff; padding:30px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.2);}
+h1{text-align:center;}
+h2{background:#4b6cb7;color:#fff;padding:10px;border-radius:6px;}
+.question{ margin:15px 0; }
+label{ font-weight:600; display:block; margin-bottom:6px; }
+input,select,textarea{ width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;}
+button{ background:#4b6cb7;color:#fff;border:none;padding:12px 30px;border-radius:25px;cursor:pointer;}
+button:hover{ background:#182848; }
+.center{ text-align:center; margin-top:20px; }
+.hidden{ display:none; }
+.table-container{ max-height:400px; overflow:auto; border:1px solid #ccc; margin-top:20px; border-radius:8px; }
+table{ width:100%; border-collapse:collapse; min-width:1000px; }
+th,td{ border:1px solid #ccc; padding:8px; text-align:center; }
+th{ background:#4b6cb7; color:#fff; position:sticky; top:0; }
+canvas{ margin-top:20px; width:100% !important; }
+.highlight { background-color: yellow; }
+.edit-btn, .delete-btn{ padding:5px 12px; border-radius:6px; margin:2px; cursor:pointer;}
+.edit-btn{ background:orange; color:#fff; }
+.delete-btn{ background:red; color:#fff; }
+</style>
+</head>
+<body>
+
+<div class="container">
+<h1>📘 Student Detailed Survey Form</h1>
+
+<form id="surveyForm">
+<h2>Basic Information</h2>
+
+<div class="question">
+<label>Student ID / Enrollment No.</label>
+<input type="text" id="studentId" placeholder="Enter student id" required>
+</div>
+
+<div class="question">
+<label>Name</label>
+<input type="text" id="name" required>
+</div>
+
+<div class="question">
+<label>Year/Semester</label>
+<select id="className" required>
+<option value="">Select Year/Semester</option>
+<option>1 sem</option>
+<option>2 sem</option>
+<option>3 sem</option>
+<option>4 sem</option>
+<option>5 sem</option>
+<option>6 sem</option>
+<option>1 Year</option>
+<option>2 Year</option>
+<option>3 Year</option>
+<option>4 Year</option>
+</select>
+</div>
+
+<div class="question">
+<label>Admission Year</label>
+<input type="number" id="admissionYear" min="2000" max="2026" placeholder="2000-2026" required>
+</div>
+
+<div class="question">
+<label>Mobile Number?</label>
+<select id="mobileSelect" onchange="toggleMobileInput()">
+<option value="">--Select--</option>
+<option value="Yes">Yes</option>
+<option value="No">No</option>
+</select>
+</div>
+
+<div class="question" id="mobileInputDiv" style="display:none;">
+<label>Enter Mobile Number:</label>
+<input type="text" id="mobile" maxlength="10" placeholder="Enter 10-digit number">
+</div>
+
+<script>
+function toggleMobileInput(){
+    const select = document.getElementById("mobileSelect");
+    const mobileDiv = document.getElementById("mobileInputDiv");
+    if(select.value==="Yes"){ mobileDiv.style.display="block"; }
+    else{ mobileDiv.style.display="none"; document.getElementById("mobile").value=""; }
+}
+</script>
+
+<div class="question">
+<label>Age</label>
+<select id="age" required>
+<option value="">Enter age</option>
+<option>15 Year</option>
+<option>16 Year</option>
+<option>17 Year</option>
+<option>18 Year</option>
+<option>19 Year</option>
+<option>20 Year</option>
+<option>21 Year</option>
+<option>22 Year</option>
+<option>23 Year</option>
+<option>24 Year</option>
+</select>
+</div>
+
+<div class="question">
+<label>Gender</label>
+<select id="gender" required>
+<option value="">Select gender</option>
+<option>Male</option>
+<option>Female</option>
+<option>Other</option>
+</select>
+</div>
+
+<h2>Study Details</h2>
+
+<div class="question">
+<label>Medium</label>
+<select id="medium" required>
+<option value="">Select medium</option>
+<option>Hindi</option>
+<option>English</option>
+<option>Hindi + English</option>
+</select>
+</div>
+
+<div class="question">
+<label>Course Name</label>
+<select id="courseName" required>
+<option value="">Select Course</option>
+<option>B.Sc</option>
+<option>M.Sc</option>
+<option>BA</option>
+<option>MA</option>
+<option>MBA</option>
+<option>BBA</option>
+<option>B.COM</option>
+<option>M.COM</option>
+<option>LLB</option>
+<option>BA-LLB</option>
+<option>OTHER</option>
+</select>
+</div>
+
+<div class="question">
+<label>Branch Name</label>
+<select id="branchName" required>
+<option value="">Select Branch</option>
+<option>COMPUTER SCIENCE</option>
+<option>OTHER</option>
+</select>
+</div>
+
+<div class="question">
+<label>Institute Name</label>
+<select id="instituteName" required>
+<option value="">Select Institute</option>
+<option>Department of Computer Science</option>
+<option>Department of Indian History</option>
+<option>Department of Business Administration</option>
+<option>Other</option>
+</select>
+</div>
+
+<div class="question">
+<label>University Name</label>
+<select id="universityName" required>
+<option value="">Select University</option>
+<option>APSU</option>
+<option>DAVV</option>
+<option>BU</option>
+<option>JUG</option>
+<option>RDVV</option>
+<option>RGPV</option>
+<option>OTHER</option>
+</select>
+</div>
+
+<div class="question">
+<label>State</label>
+<select id="state" required>
+<option value="">Select State</option>
+<option>Madhya Pradesh</option>
+<option>Uttar Pradesh</option>
+<option>New Delhi</option>
+<option>Bihar</option>
+<option>Rajasthan</option>
+</select>
+</div>
+
+<div class="question">
+<label>District</label>
+<select id="district" required>
+<option value="">Select District</option>
+<option>Rewa</option>
+<option>Satna</option>
+<option>Bhopal</option>
+<option>Jabalpur</option>
+<option>Indore</option>
+<option>Ujjain</option>
+</select>
+</div>
+
+<div class="question">
+<label>Daily Study Hours</label>
+<select id="hours" required>
+<option value="">Select hours</option>
+<option>1-2 Hours</option>
+<option>3-4 Hours</option>
+<option>5-6 Hours</option>
+<option>7-8 Hours</option>
+<option>8-10 Hours</option>
+<option>10-12 Hours</option>
+<option>12+ Hours</option>
+</select>
+</div>
+
+<div class="question">
+<label>Study Method</label>
+<select id="method" required>
+<option value="">Select method</option>
+<option>Books</option>
+<option>Online Videos</option>
+<option>Coaching</option>
+<option>Self Study</option>
+<option>Self Study+Coaching</option>
+<option>Self Study+Book+Coaching</option>
+<option>Self Study+Online Video</option>
+</select>
+</div>
+
+<div class="question">
+<label>Exam Stress Level</label>
+<select id="stress" required>
+<option value="">Select Stress Level</option>
+<option>High</option>
+<option>Medium</option>
+<option>Low</option>
+</select>
+</div>
+
+<div class="question">
+<label>Last Exam Percentage/CGPA/SGPA</label>
+<input type="number" id="percentage" min="0" max="100" step="0.01" required>
+</div>
+
+<div class="center">
+<button type="submit">Submit Survey</button>
+</div>
+</form>
+
+<hr>
+<div class="center">
+<button onclick="askPassword()">View Dashboard (Admin)</button>
+</div>
+
+<div id="dashboard" class="hidden">
+<h2>📊 Survey Dashboard</h2>
+<p><b>Total Students:</b> <span id="totalCount">0</span></p>
+<div class="search-container" style="text-align:center; margin:15px 0;">
+<input type="text" id="searchInput" placeholder="🔍 Search any student data..." style="width:400px; padding:10px; font-size:16px; border:2px solid #4CAF50; border-radius:8px; outline:none; text-align:center;">
+</div>
+
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>#</th><th>ID</th><th>Name</th><th>Class</th><th>Year</th><th>Mobile</th><th>Age</th><th>Gender</th><th>Medium</th><th>Course</th><th>Branch</th><th>Institute</th><th>University</th><th>State</th><th>District</th><th>Hours</th><th>Method</th><th>%</th><th>Stress</th><th>Actions</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+
+<div class="question">
+<label>Select Column</label>
+<select id="columnSelect" onchange="drawGraph()">
+<option value="">-- Select Column --</option>
+<option value="hours">Study Hours</option>
+<option value="method">Study Method</option>
+<option value="gender">Gender</option>
+<option value="stress">Stress</option>
+<option value="medium">Medium</option>
+<option value="courseName">Course Name</option>
+<option value="branchName">Branch Name</option>
+<option value="instituteName">Institute Name</option>
+<option value="universityName">University Name</option>
+<option value="state">State</option>
+<option value="district">District</option>
+<option value="percentage">Percentage</option>
+</select>
+</div>
+
+<canvas id="surveyChart" height="120"></canvas>
+<div class="center">
+<button id="downloadBtn" class="hidden" onclick="downloadGraph()">Download Graph</button>
+</div>
+</div>
+
+<script>
+const ADMIN_PASSWORD="admin123";
+let chart;
+let editIndex = -1; // for tracking edit
+
+function askPassword(){
+    let pass = prompt("Enter Dashboard Password:");
+    if(pass===ADMIN_PASSWORD){
+        document.getElementById("dashboard").classList.remove("hidden");
+        loadData();
+    } else { alert("Wrong Password!"); }
+}
+
+document.getElementById("surveyForm").addEventListener("submit", function(e){
+    e.preventDefault();
+
+    const mobileVal = document.getElementById("mobile").value.trim();
+    if(document.getElementById("mobileSelect").value==="Yes" && (mobileVal.length!==10 || isNaN(mobileVal))){
+        alert("Mobile number must be 10 digits!");
+        return;
+    }
+
+    const data = {
+        studentId: document.getElementById("studentId").value,
+        name: document.getElementById("name").value,
+        className: document.getElementById("className").value,
+        admissionYear: document.getElementById("admissionYear").value,
+        mobile: mobileVal || "N/A",
+        age: document.getElementById("age").value,
+        gender: document.getElementById("gender").value,
+        medium: document.getElementById("medium").value,
+        courseName: document.getElementById("courseName").value,
+        branchName: document.getElementById("branchName").value,
+        instituteName: document.getElementById("instituteName").value,
+        universityName: document.getElementById("universityName").value,
+        state: document.getElementById("state").value,
+        district: document.getElementById("district").value,
+        hours: document.getElementById("hours").value,
+        method: document.getElementById("method").value,
+        percentage: document.getElementById("percentage").value,
+        stress: document.getElementById("stress").value
+    };
+
+    let surveys = JSON.parse(localStorage.getItem("surveys")) || [];
+
+    if(editIndex > -1){
+        surveys[editIndex] = data;
+        editIndex = -1;
+        alert("Survey updated successfully! ✅");
+    } else {
+        surveys.push(data);
+        alert("Survey submitted successfully! ✅");
+    }
+
+    localStorage.setItem("surveys", JSON.stringify(surveys));
+    this.reset();
+    loadData();
+});
+
+// Load Data
+function loadData(){
+    let surveys = JSON.parse(localStorage.getItem("surveys")) || [];
+    document.getElementById("totalCount").innerText = surveys.length;
+    const tbody = document.getElementById("tableBody");
+    tbody.innerHTML="";
+    surveys.forEach((s,i)=>{
+        tbody.innerHTML += `<tr>
+        <td>${i+1}</td><td>${s.studentId}</td><td>${s.name}</td><td>${s.className}</td><td>${s.admissionYear}</td>
+        <td>${s.mobile}</td><td>${s.age}</td><td>${s.gender}</td><td>${s.medium}</td><td>${s.courseName}</td>
+        <td>${s.branchName}</td><td>${s.instituteName}</td><td>${s.universityName}</td><td>${s.state}</td><td>${s.district}</td>
+        <td>${s.hours}</td><td>${s.method}</td><td>${s.percentage}</td><td>${s.stress}</td>
+        <td>
+        <button class="edit-btn" onclick="editRow(${i})">Edit</button>
+        <button class="delete-btn" onclick="deleteRow(${i})">Delete</button>
+        </td>
+        </tr>`;
+    });
+    if(chart) chart.destroy();
+    document.getElementById("downloadBtn").classList.add("hidden");
+}
+
+// Edit row
+function editRow(index){
+    let surveys = JSON.parse(localStorage.getItem("surveys")) || [];
+    const s = surveys[index];
+    document.getElementById("studentId").value = s.studentId;
+    document.getElementById("name").value = s.name;
+    document.getElementById("className").value = s.className;
+    document.getElementById("admissionYear").value = s.admissionYear;
+    if(s.mobile!=="N/A"){ document.getElementById("mobileSelect").value="Yes"; toggleMobileInput(); document.getElementById("mobile").value=s.mobile;}
+    else{ document.getElementById("mobileSelect").value="No"; toggleMobileInput(); }
+    document.getElementById("age").value = s.age;
+    document.getElementById("gender").value = s.gender;
+    document.getElementById("medium").value = s.medium;
+    document.getElementById("courseName").value = s.courseName;
+    document.getElementById("branchName").value = s.branchName;
+    document.getElementById("instituteName").value = s.instituteName;
+    document.getElementById("universityName").value = s.universityName;
+    document.getElementById("state").value = s.state;
+    document.getElementById("district").value = s.district;
+    document.getElementById("hours").value = s.hours;
+    document.getElementById("method").value = s.method;
+    document.getElementById("percentage").value = s.percentage;
+    document.getElementById("stress").value = s.stress;
+    editIndex = index;
+    window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+// Delete row
+function deleteRow(index){
+    let surveys = JSON.parse(localStorage.getItem("surveys")) || [];
+    if(confirm("Are you sure to delete this row?")){
+        surveys.splice(index,1);
+        localStorage.setItem("surveys", JSON.stringify(surveys));
+        loadData();
+    }
+}
+
+// Graph
+function drawGraph(){
+    let col = document.getElementById("columnSelect").value;
+    if(!col) return;
+    let surveys = JSON.parse(localStorage.getItem("surveys")) || [];
+    if(surveys.length===0){ alert("No data available!"); return; }
+    let count={};
+    surveys.forEach(s=>{ let v=s[col]; count[v]=(count[v]||0)+1;});
+    let labels=Object.keys(count);
+    let values=Object.values(count);
+    let ctx=document.getElementById("surveyChart").getContext("2d");
+    if(chart) chart.destroy();
+    chart=new Chart(ctx,{
+        type:'bar',
+        data:{ labels, datasets:[{label:col.toUpperCase(), data:values, backgroundColor:['#4b6cb7','#9face6','#74ebd5','#ff9a9e']}] }
+    });
+    document.getElementById("downloadBtn").classList.remove("hidden");
+}
+
+// Download
+function downloadGraph(){
+    let canvas=document.getElementById("surveyChart");
+    let link=document.createElement("a");
+    link.download="survey-graph.png";
+    link.href=canvas.toDataURL();
+    link.click();
+}
+
+// Search highlight
+document.getElementById('searchInput').addEventListener('keyup',function () {
+    let input= this.value.toLowerCase();
+    let table= document.querySelector('table');
+    if(!table) return;
+    let cells= table.getElementsByTagName('td');
+    for (let cell of cells ){ cell.classList.remove('highlight'); }
+    if(input.trim()!==''){
+      for (let cell of cells){ if(cell.textContent.toLowerCase().includes(input)){ cell.classList.add('highlight'); }}
+    }
+});
+</script>
+
+</body>
+</html>
