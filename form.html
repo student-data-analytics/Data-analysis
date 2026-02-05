@@ -266,6 +266,38 @@ function toggleMobileInput(){
 <div class="search-container" style="text-align:center; margin:15px 0;">
 <input type="text" id="searchInput" placeholder="🔍 Search any student data..." style="width:400px; padding:10px; font-size:16px; border:2px solid #4CAF50; border-radius:8px; outline:none; text-align:center;">
 </div>
+    <!-- ===== DATA ANALYSIS PANEL (NEW - NO OLD CODE TOUCHED) ===== -->
+<div class="search-container" style="text-align:center; margin:15px 0;">
+  
+  <select id="analysisColumn"
+    style="width:220px; padding:10px; font-size:16px; border:2px solid #4CAF50; border-radius:8px;">
+    <option value="">Select Column</option>
+    <option value="age">Age</option>
+    <option value="admissionYear">Admission Year</option>
+    <option value="percentage">Percentage</option>
+     <option value="hours">hours</option>
+   
+  </select>
+
+  <select id="analysisOperation"
+    style="width:220px; padding:10px; font-size:16px; border:2px solid #4CAF50; border-radius:8px;">
+    <option value="">Select Operation</option>
+    <option value="min">Minimum</option>
+    <option value="max">Maximum</option>
+    <option value="avg">Average</option>
+    <option value="sum">Sum</option>
+    <option value="count">Total Count</option>
+  </select>
+
+  <br><br>
+  <button onclick="analyseData()">Analyse</button>
+
+</div>
+
+<p id="analysisResult"
+ style="text-align:center;font-size:18px;font-weight:bold;color:#182848;">
+</p>
+
 
 <div class="table-container">
 <table>
@@ -460,7 +492,49 @@ document.getElementById('searchInput').addEventListener('keyup',function () {
       for (let cell of cells){ if(cell.textContent.toLowerCase().includes(input)){ cell.classList.add('highlight'); }}
     }
 });
+    // ===== DATA ANALYSIS (NEW - OLD JS UNCHANGED) =====
+function analyseData(){
+
+  const col = document.getElementById("analysisColumn").value;
+  const op  = document.getElementById("analysisOperation").value;
+  const res = document.getElementById("analysisResult");
+
+  if(!col || !op){
+    res.innerText = "⚠ Column aur Operation select karein";
+    return;
+  }
+
+  let surveys = JSON.parse(localStorage.getItem("surveys")) || [];
+  if(surveys.length === 0){
+    res.innerText = "⚠ Koi data available nahi hai";
+    return;
+  }
+
+  if(op === "count"){
+    res.innerText = "Total Records = " + surveys.length;
+    return;
+  }
+
+  let values = surveys
+    .map(s => parseFloat(s[col]))
+    .filter(v => !isNaN(v));
+
+  if(values.length === 0){
+    res.innerText = "⚠ Is column me numeric data nahi hai";
+    return;
+  }
+
+  let result;
+  if(op === "min") result = Math.min(...values);
+  if(op === "max") result = Math.max(...values);
+  if(op === "sum") result = values.reduce((a,b)=>a+b,0);
+  if(op === "avg") result = (values.reduce((a,b)=>a+b,0)/values.length).toFixed(2);
+
+  res.innerText = op.toUpperCase() + " of " + col + " = " + result;
+}
+
 </script>
 
 </body>
 </html>
+
