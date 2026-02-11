@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Student Data Analytics - s.html</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{--accent:#007acc;--accent2:#00bfa5;--card:#ffffff;--bg1:#eaf6ff;--bg2:#ffffff}
+    body{font-family:'Segoe UI',sans-serif;background:linear-gradient(180deg,var(--bg1),var(--bg2));margin:0;padding:18px;color:#123}
+    h1{text-align:center;color:var(--accent);margin-bottom:10px}
+    .center-box{text-align:center;margin:10px auto;max-width:600px}
+    .card{background:var(--card);border-radius:12px;box-shadow:0 6px 20px rgba(3,19,60,0.08);padding:16px;margin-bottom:16px}
+    label{font-weight:600;color:#034;display:block;margin-bottom:6px}
+    input[type=text],select,input[type=file]{padding:10px;border:1px solid #cfddee;border-radius:8px;width:100%;margin-bottom:10px}
+    table{width:100%;border-collapse:collapse;margin-top:10px;border-radius:8px;overflow:hidden}
+    th,td{border-bottom:1px solid #eef5fb;padding:8px;text-align:left}
+    th{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff}
+    tr.row-highlight{background:#fff7a8}
+    td.cell-highlight{background:#fff7a8}
+    button{background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;transition:0.3s}
+    button:hover{background:#005f99}
+    button.ghost{background:#fff;color:var(--accent);border:1px solid #007acc}
+    button.danger{background:#e53935}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
+    .result{background:#e3f2fd;padding:10px;border-radius:8px;margin-top:8px;color:#02396b;font-weight:600}
+    canvas{background:#fff;border-radius:8px;margin-top:12px;box-shadow:0 4px 12px rgba(0,0,0,0.08);width:100%}
+    #customizePanel{display:none;margin-top:10px;padding:10px;border-radius:8px;background:#f5faff;box-shadow:inset 0 0 10px rgba(0,0,0,0.05)}
+    #zoomSlider{width:200px}
+    .highlight { background-color: yellow; }
+    .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+    @media(max-width:900px){.controls{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <h1>Student Data Analytics</h1>
+
+  <div class="center-box card">
+    <label>Global Search</label>
+    <input id="globalSearch" type="text" placeholder="Search any student data..." />
+    <div class="controls"><button id="backBtn" class="ghost">Back</button></div>
+  </div>
+  
+
+  <div class="card">
+    <label>Choose File (Excel: .xlsx, .xls, .csv)</label>
+    <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" />
+  </div>
+
+  <div id="tableArea" style="display:none">
+
+    <div class="card">
+      <div class="controls">
+        <div style="flex:1;min-width:260px">
+          <label>Column Search</label>
+          <select id="colSelect"></select>
+          <input id="colSearchVal" type="text" placeholder="Enter value to search" />
+          <div style="margin-top:6px">
+            <button id="colSearchBtn">Search</button>
+          </div>
+        </div>
+        <div style="flex:1;min-width:260px">
+          <label>Analyze Column</label>
+          <select id="anColSelect"></select>
+          <select id="anOpSelect">
+            <option value="sum">Total (Sum)</option>
+            <option value="min">Minimum</option>
+            <option value="max">Maximum</option>
+            <option value="avg">Average</option>
+            <option value="count">Count</option>
+            <option value="passfail">Pass/Fail Count (1=Pass,0=Fail)</option>
+          </select>
+          <div style="margin-top:6px">
+            <button id="analyzeBtn">Analyze</button>
+          </div>
+        </div>
+      </div>
+      <div id="anResult" class="result" style="display:none"></div>
+    </div>
+
+    <div class="card">
+      <div style="overflow:auto;max-height:420px">
+        <table id="dataTable"><thead></thead><tbody></tbody></table>
+      </div>
+
+      <div class="controls" style="margin-top:12px">
+        <button id="downloadCSVBtn" class="ghost">CSV</button>
+        <button id="downloadXLSXBtn" class="ghost">Excel</button>
+        <button id="downloadPDFBtn" class="ghost">PDF</button>
+        <button id="printBtn" class="ghost">Print</button>
+      </div>
+
+      <hr style="margin:14px 0;border:none;border-top:1px dashed #e8f4fb" />
+
+      <!-- Add / Update / Delete controls -->
+      <div class="controls">
+        <button id="toggleAdd" class="ghost">Add Row</button>
+        <button id="toggleUpdate" class="ghost">Update Row</button>
+        <button id="toggleDelete" class="danger ghost">Delete Rows</button>
+      </div>
+
+      <div id="addArea" style="display:none;margin-top:10px" class="card">
+        <h3 style="margin-top:0">Add Row</h3>
+        <form id="addForm" class="form-grid"></form>
+        <div class="controls" style="margin-top:10px">
+          <button id="addSubmit">Add</button>
+          <button id="addClear" type="button" class="ghost">Clear</button>
+        </div>
+      </div>
+
+      <div id="updateArea" style="display:none;margin-top:10px" class="card">
+        <h3 style="margin-top:0">Update Row</h3>
+        <label>Primary Key Value (first column)</label>
+        <input id="updateKey" type="text" placeholder="Enter primary key value" />
+        <label>Select Column</label>
+        <select id="updateCol"></select>
+        <label>New Value</label>
+        <input id="updateVal" type="text" placeholder="Enter new value" />
+        <div class="controls" style="margin-top:10px">
+          <button id="updateBtn">Update</button>
+          <button id="updateClear" type="button" class="ghost">Clear</button>
+        </div>
+      </div>
+
+      <div id="deleteArea" style="display:none;margin-top:10px" class="card">
+        <h3 style="margin-top:0">Delete Rows</h3>
+        <label>Select Column</label>
+        <select id="delCol"></select>
+        <label>Value to Delete</label>
+        <input id="delVal" type="text" placeholder="Enter value to delete" />
+        <div class="controls" style="margin-top:10px">
+          <button id="delBtn" class="danger">Delete</button>
+          <button id="delClear" type="button" class="ghost">Clear</button>
+        </div>
+      </div>
+
+      <hr style="margin:14px 0;border:none;border-top:1px dashed #e8f4fb" />
+
+      <div id="graphArea" class="card">
+        <h3 style="margin-top:0">Graph Visualization</h3>
+        <div class="controls">
+          <div style="flex:1">
+            <label>Select Column</label>
+            <select id="graphCol"></select>
+          </div>
+          <div style="flex:1">
+            <label style="visibility:hidden">Buttons</label>
+            <div>
+              <button id="graphBtn">Graph Analyze</button>
+              <button id="customizeBtn" class="ghost">Customize Graph</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="customizePanel">
+          <h4>Customize Graph</h4>
+          <div class="controls">
+            <label>Zoom</label>
+            <input type="range" id="zoomSlider" min="0.5" max="2" step="0.1" value="1" />
+            <select id="graphTypeSelect">
+              <option value="bar">Bar</option>
+              <option value="line">Line</option>
+              <option value="pie">Pie</option>
+            </select>
+            <select id="colorModeSelect">
+              <option value="auto">Auto Colors</option>
+              <option value="single">Single Color</option>
+            </select>
+          </div>
+        </div>
+        <canvas id="graphCanvas" height="300"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let headers=[], rows=[], originalRows=[], chart=null;
+    let currentGraphType='bar', colorMode='auto', zoomLevel=1;
+
+    // DOM refs
+    const fileInput=document.getElementById('fileInput');
+    const tableArea=document.getElementById('tableArea');
+    const dataTable=document.getElementById('dataTable');
+    const globalSearch=document.getElementById('globalSearch');
+    const backBtn=document.getElementById('backBtn');
+    const colSelect=document.getElementById('colSelect');
+    const colSearchVal=document.getElementById('colSearchVal');
+    const colSearchBtn=document.getElementById('colSearchBtn');
+    const anColSelect=document.getElementById('anColSelect');
+    const anOpSelect=document.getElementById('anOpSelect');
+    const analyzeBtn=document.getElementById('analyzeBtn');
+    const anResult=document.getElementById('anResult');
+    const graphCol=document.getElementById('graphCol');
+    const graphBtn=document.getElementById('graphBtn');
+    const customizeBtn=document.getElementById('customizeBtn');
+    const customizePanel=document.getElementById('customizePanel');
+    const graphCanvas=document.getElementById('graphCanvas');
+    const graphTypeSelect=document.getElementById('graphTypeSelect');
+    const colorModeSelect=document.getElementById('colorModeSelect');
+    const zoomSlider=document.getElementById('zoomSlider');
+
+    // Add/Update/Delete refs
+    const toggleAdd=document.getElementById('toggleAdd');
+    const toggleUpdate=document.getElementById('toggleUpdate');
+    const toggleDelete=document.getElementById('toggleDelete');
+    const addArea=document.getElementById('addArea');
+    const updateArea=document.getElementById('updateArea');
+    const deleteArea=document.getElementById('deleteArea');
+    const addForm=document.getElementById('addForm');
+    const addSubmit=document.getElementById('addSubmit');
+    const addClear=document.getElementById('addClear');
+    const updateKey=document.getElementById('updateKey');
+    const updateCol=document.getElementById('updateCol');
+    const updateVal=document.getElementById('updateVal');
+    const updateBtn=document.getElementById('updateBtn');
+    const updateClear=document.getElementById('updateClear');
+    const delCol=document.getElementById('delCol');
+    const delVal=document.getElementById('delVal');
+    const delBtn=document.getElementById('delBtn');
+    const delClear=document.getElementById('delClear');
+
+    // Download/print refs
+    const printBtn=document.getElementById('printBtn');
+    const downloadCSVBtn=document.getElementById('downloadCSVBtn');
+    const downloadXLSXBtn=document.getElementById('downloadXLSXBtn');
+    const downloadPDFBtn=document.getElementById('downloadPDFBtn');
+
+    // Event listeners
+    fileInput.addEventListener('change', handleFile);
+    colSearchBtn.addEventListener('click', ()=>applyColumnSearch(colSelect.value,colSearchVal.value));
+    analyzeBtn.addEventListener('click', analyzeColumn);
+    backBtn.addEventListener('click', ()=>{ rows=[...originalRows]; renderTable(); globalSearch.value=''; });
+    globalSearch.addEventListener('input', ()=>applyGlobalSearch(globalSearch.value));
+    graphBtn.addEventListener('click', ()=>drawGraph(graphCol.value));
+    customizeBtn.addEventListener('click', ()=> customToggle());
+    graphTypeSelect.addEventListener('change', ()=>{ currentGraphType = graphTypeSelect.value; drawGraph(graphCol.value); });
+    colorModeSelect.addEventListener('change', ()=>{ colorMode = colorModeSelect.value; drawGraph(graphCol.value); });
+    zoomSlider.addEventListener('input', ()=>{ zoomLevel = parseFloat(zoomSlider.value); drawGraph(graphCol.value); });
+
+    toggleAdd.addEventListener('click', ()=>toggleSection(addArea));
+    toggleUpdate.addEventListener('click', ()=>toggleSection(updateArea));
+    toggleDelete.addEventListener('click', ()=>toggleSection(deleteArea));
+    addSubmit.addEventListener('click', e=>{ e.preventDefault(); addRow(); });
+    addClear.addEventListener('click', ()=>addForm.reset());
+    updateBtn.addEventListener('click', e=>{ e.preventDefault(); doUpdate(); });
+    updateClear.addEventListener('click', ()=>{ updateKey.value=''; updateVal.value=''; updateCol.selectedIndex=0; });
+    delBtn.addEventListener('click', e=>{ e.preventDefault(); doDelete(); });
+    delClear.addEventListener('click', ()=>{ delVal.value=''; delCol.selectedIndex=0; });
+
+    function customToggle(){ customizePanel.style.display = (customizePanel.style.display==='block'?'none':'block'); }
+
+    function handleFile(e){
+      const f = e.target.files[0]; if(!f) return;
+      const reader = new FileReader();
+      reader.onload = (ev)=>{
+        const wb = XLSX.read(ev.target.result,{type:'array'});
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet,{header:1,defval:''});
+        headers = json[0] || [];
+        rows = json.slice(1).map(r=>{ const o={}; headers.forEach((h,i)=>o[h]=r[i]??''); return o; });
+        originalRows = rows.map(r=>({...r}));
+        renderTable();
+      };
+      reader.readAsArrayBuffer(f);
+    }
+
+    function renderTable(){
+      tableArea.style.display='block';
+      const thead = dataTable.querySelector('thead'); const tbody = dataTable.querySelector('tbody');
+      thead.innerHTML = ''; tbody.innerHTML = '';
+      const thr = document.createElement('tr');
+      headers.forEach(h=>{ const th = document.createElement('th'); th.textContent = h; thr.appendChild(th); });
+      thead.appendChild(thr);
+
+      rows.forEach(r=>{
+        const tr = document.createElement('tr');
+        headers.forEach(h=>{
+          const td = document.createElement('td');
+          td.textContent = r[h] ?? '';
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+
+      populateSelects();
+      buildAddForm();
+
+      // After rendering, if there's an active global search, highlight matching cells
+      const q = String(globalSearch.value||'').toLowerCase().trim();
+      if(q){ highlightMatches(q); }
+    }
+
+    function populateSelects(){
+      [colSelect, anColSelect, updateCol, delCol, graphCol].forEach(sel=>{
+        sel.innerHTML='';
+        headers.forEach(h=>{ const o=document.createElement('option'); o.value=h; o.textContent=h; sel.appendChild(o); });
+      });
+    }
+
+    function buildAddForm(){
+      addForm.innerHTML='';
+      headers.forEach(h=>{
+        const inp = document.createElement('input');
+        inp.name = h; inp.placeholder = h; addForm.appendChild(inp);
+      });
+    }
+
+    // Global search: filter rows to only those that contain q anywhere, then render and highlight matched cells
+    function applyGlobalSearch(q){
+      q = String(q||'').toLowerCase().trim();
+      if(!q){ rows = [...originalRows]; renderTable(); return; }
+      rows = originalRows.filter(r=> Object.values(r).some(v=> String(v).toLowerCase().includes(q)) );
+      renderTable();
+      highlightMatches(q);
+    }
+
+    // Highlight matching cells (and also mark row if any cell matches)
+    function highlightMatches(q){
+      const tbody = dataTable.querySelector('tbody');
+      Array.from(tbody.rows).forEach(tr=>{
+        let rowHas=false;
+        Array.from(tr.cells).forEach(td=>{
+          const text = String(td.textContent||'').toLowerCase();
+          if(q && text.includes(q)){
+            td.classList.add('cell-highlight');
+            rowHas=true;
+          } else {
+            td.classList.remove('cell-highlight');
+          }
+        });
+        if(rowHas) tr.classList.add('row-highlight'); else tr.classList.remove('row-highlight');
+      });
+    }
+
+    // Column search filters to matching rows only (exact/contains)
+    function applyColumnSearch(col,val){
+      val = String(val||'').toLowerCase().trim();
+      if(!val){ alert('Enter value'); return; }
+      rows = originalRows.filter(r=> String(r[col]).toLowerCase().includes(val) );
+      renderTable();
+      highlightMatches(val);
+      globalSearch.value = '';
+    }
+
+    function analyzeColumn(){
+      const col = anColSelect.value; const op = anOpSelect.value;
+      const vals = rows.map(r=>parseFloat(String(r[col]).replace(/[^0-9.-]+/g,''))).filter(v=>!isNaN(v));
+      let res='';
+      if(op==='sum') res = vals.reduce((a,b)=>a+b,0);
+      else if(op==='min') res = vals.length?Math.min(...vals):'N/A';
+      else if(op==='max') res = vals.length?Math.max(...vals):'N/A';
+      else if(op==='avg') res = vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):'N/A';
+      else if(op==='count') res = rows.length;
+      else if(op==='passfail'){ const pass = rows.filter(r=>String(r[col])==='1').length; const fail = rows.filter(r=>String(r[col])==='0').length; res = `Pass: ${pass}, Fail: ${fail}`; anResult.style.display='block'; anResult.textContent = `Result for ${col}: ${res}`; drawGraph(col,{pass,fail}); return; }
+      anResult.style.display='block'; anResult.textContent = `Result for ${col}: ${res}`;
+      drawGraph(col);
+    }
+
+    // Add / Update / Delete operations
+    function toggleSection(section){
+      [addArea, updateArea, deleteArea].forEach(s=>{ if(s!==section) s.style.display='none'; });
+      section.style.display = (section.style.display==='block'?'none':'block');
+    }
+
+    function addRow(){
+      const inputs = addForm.querySelectorAll('input');
+      const obj = {}; let filled=false;
+      inputs.forEach((inp,i)=>{ obj[headers[i]] = inp.value; if(inp.value && String(inp.value).trim()!=='') filled=true; });
+      if(!filled){ alert('Please fill at least one field'); return; }
+      rows.push(obj); originalRows.push({...obj}); renderTable(); addForm.reset(); alert('Row added'); 
+    }
+
+    function doUpdate(){
+      const key = updateKey.value; if(!key){ alert('Enter primary key value'); return; }
+      const col = updateCol.value; const val = updateVal.value; const pk = headers[0];
+      let found=false;
+      rows = rows.map(r=>{ if(String(r[pk])===String(key)){ r[col]=val; found=true } return r; });
+      originalRows = originalRows.map(r=>{ if(String(r[pk])===String(key)){ r[col]=val } return r; });
+      if(found){ renderTable(); alert('Updated successfully'); } else alert('No row found with that primary key');
+    }
+
+    function doDelete(){
+      const col = delCol.value; const val = delVal.value;
+      if(!val){ alert('Enter value to delete'); return; }
+      const before = rows.length;
+      rows = rows.filter(r=> String(r[col]) !== String(val) );
+      originalRows = originalRows.filter(r=> String(r[col]) !== String(val) );
+      renderTable();
+      alert(`${before - rows.length} row(s) deleted`);
+    }
+
+    // Downloads
+    function downloadCSV(){
+      let csv = headers.join(',') + '\n';
+      rows.forEach(r=>{ csv += headers.map(h=>`"${String(r[h]||'').replace(/"/g,'""')}"`).join(',') + '\n'; });
+      const blob = new Blob([csv], {type:'text/csv'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='s.csv'; a.click();
+    }
+    function downloadXLSX(){ const ws = XLSX.utils.json_to_sheet(rows); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Data'); XLSX.writeFile(wb,'s.xlsx'); }
+    function downloadPDF(){
+      const { jsPDF } = window.jspdf || {};
+      if(!jsPDF){ alert('PDF export requires jspdf'); return; }
+      const doc = new jsPDF();
+      let y = 10; doc.setFontSize(12); doc.text('Student Data',10,y); y+=8;
+      headers.forEach((h,i)=>{ doc.text(String(h),10 + i*40, y); });
+      y+=8;
+      rows.forEach(r=>{ headers.forEach((h,i)=>{ doc.text(String(r[h]||''),10 + i*40, y); }); y+=8; if(y>270){ doc.addPage(); y=10; } });
+      doc.save('s.pdf');
+    }
+
+    // Graph drawing (Chart.js)
+    function drawGraph(col, passFailObj){
+      if(chart){ chart.destroy(); chart=null; }
+      const ctx = graphCanvas.getContext('2d');
+      let labels=[], data=[], colors=[];
+      if(passFailObj){ labels=['Pass','Fail']; data=[passFailObj.pass, passFailObj.fail]; colors=['#00bfa5','#ff7043']; }
+      else{
+        const freq={};
+        rows.forEach(r=>{ const key = String(r[col]||'').trim() || '(empty)'; freq[key] = (freq[key]||0) + 1; });
+        labels = Object.keys(freq);
+        data = Object.values(freq);
+        if(colorMode==='auto'){ colors = labels.map((_,i)=>`hsl(${(i*60)%360},70%,55%)`); } else { colors = labels.map(()=> '#2196f3'); }
+      }
+      const cfg = {
+        type: currentGraphType,
+        data: { labels, datasets: [{ label: col, data, backgroundColor: colors, borderColor: colors }] },
+        options: { responsive:true, maintainAspectRatio:false, scales: { y: { beginAtZero:true, max: Math.max(...data||[1]) * zoomLevel } } }
+      };
+      chart = new Chart(ctx, cfg);
+    }
+
+    // Initialize
+    function init(){ tableArea.style.display='none'; }
+    init();
+  </script>
+</body>
+</html>
