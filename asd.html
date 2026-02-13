@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Student Data Analytics - Final Graph Version</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --accent:#007acc;
+      --accent2:#00bfa5;
+      --card:#ffffff;
+      --bg1:#eaf6ff;
+      --bg2:#ffffff;
+    }
+    body {
+      font-family:'Segoe UI',sans-serif;
+      background:linear-gradient(180deg,var(--bg1),var(--bg2));
+      margin:0;
+      padding:18px;
+      color:#123;
+    }
+    h1 {text-align:center;color:var(--accent);margin-bottom:10px}
+    .center-box {text-align:center;margin:10px auto;max-width:600px}
+    .card {
+      background:var(--card);
+      border-radius:12px;
+      box-shadow:0 6px 20px rgba(3,19,60,0.08);
+      padding:16px;
+      margin-bottom:16px;
+    }
+    label {font-weight:600;color:#034;display:block;margin-bottom:6px}
+    input[type=text],select,input[type=file]{
+      padding:10px;border:1px solid #cfddee;border-radius:8px;width:100%;margin-bottom:10px
+    }
+    table{width:100%;border-collapse:collapse;margin-top:10px;border-radius:8px;overflow:hidden}
+    th,td{border-bottom:1px solid #eef5fb;padding:8px;text-align:left}
+    th{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#fff}
+    tr.row-highlight{background:#fff7a8}
+    td.cell-highlight{background:#fff7a8}
+    button{
+      background:var(--accent);
+      color:#fff;
+      border:none;
+      padding:8px 14px;
+      border-radius:8px;
+      cursor:pointer;
+      transition:0.3s;
+    }
+    button:hover{background:#005f99}
+    button.ghost{background:#fff;color:var(--accent);border:1px solid #007acc}
+    button.danger{background:#e53935}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
+    .result{background:#e3f2fd;padding:10px;border-radius:8px;margin-top:8px;color:#02396b;font-weight:600}
+    .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+    canvas {
+      background:#fff;
+      border-radius:8px;
+      margin-top:12px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.08);
+      width:100%;
+      max-width:1000px;
+      height:450px !important;
+      display:block;
+      margin-left:auto;
+      margin-right:auto;
+    }
+    @media(max-width:900px){.controls{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <h1>Student Data Analytics</h1>
+
+  <div class="center-box card">
+    <label>Global Search</label>
+    <input id="globalSearch" type="text" placeholder="Search any student data..." />
+    <div class="controls"><button id="backBtn" class="ghost">Back</button></div>
+  </div>
+
+  <div class="card">
+    <label>Choose File (Excel: .xlsx, .xls, .csv)</label>
+    <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" />
+  </div>
+
+  <div id="tableArea" style="display:none">
+
+    <div class="card">
+      <div class="controls">
+        <div style="flex:1;min-width:260px">
+          <label>Column Search</label>
+          <select id="colSelect"></select>
+          <input id="colSearchVal" type="text" placeholder="Enter value to search" />
+          <div style="margin-top:6px">
+            <button id="colSearchBtn">Search</button>
+          </div>
+        </div>
+        <div style="flex:1;min-width:260px">
+          <label>Analyze Column</label>
+          <select id="anColSelect"></select>
+          <select id="anOpSelect">
+            <option value="sum">Total (Sum)</option>
+            <option value="min">Minimum</option>
+            <option value="max">Maximum</option>
+            <option value="avg">Average</option>
+            <option value="count">Count</option>
+            <option value="passfail">Pass/Fail Count (1=Pass,0=Fail)</option>
+          </select>
+          <div style="margin-top:6px">
+            <button id="analyzeBtn">Analyze</button>
+          </div>
+        </div>
+      </div>
+      <div id="anResult" class="result" style="display:none"></div>
+    </div>
+
+    <div class="card">
+      <div style="overflow:auto;max-height:420px">
+        <table id="dataTable"><thead></thead><tbody></tbody></table>
+      </div>
+
+      <div class="controls" style="margin-top:12px">
+        <button id="downloadCSVBtn" class="ghost">CSV</button>
+        <button id="downloadXLSXBtn" class="ghost">Excel</button>
+        <button id="printBtn" class="ghost">Print</button>
+      </div>
+
+      <hr style="margin:14px 0;border:none;border-top:1px dashed #e8f4fb" />
+
+      <div class="controls">
+        <button id="toggleAdd" class="ghost">Add Row</button>
+        <button id="toggleUpdate" class="ghost">Update Row</button>
+        <button id="toggleDelete" class="danger ghost">Delete Rows</button>
+      </div>
+
+      <div id="addArea" style="display:none;margin-top:10px" class="card">
+        <h3 style="margin-top:0">Add Row</h3>
+        <form id="addForm" class="form-grid"></form>
+        <div class="controls" style="margin-top:10px">
+          <button id="addSubmit">Add</button>
+          <button id="addClear" type="button" class="ghost">Clear</button>
+        </div>
+      </div>
+
+      <div id="updateArea" style="display:none;margin-top:10px" class="card">
+        <h3 style="margin-top:0">Update Row</h3>
+        <label>Primary Key Value (first column)</label>
+        <input id="updateKey" type="text" placeholder="Enter primary key value" />
+        <label>Select Column</label>
+        <select id="updateCol"></select>
+        <label>New Value</label>
+        <input id="updateVal" type="text" placeholder="Enter new value" />
+        <div class="controls" style="margin-top:10px">
+          <button id="updateBtn">Update</button>
+          <button id="updateClear" type="button" class="ghost">Clear</button>
+        </div>
+      </div>
+
+      <div id="deleteArea" style="display:none;margin-top:10px" class="card">
+        <h3 style="margin-top:0">Delete Rows</h3>
+        <label>Select Column</label>
+        <select id="delCol"></select>
+        <label>Value to Delete</label>
+        <input id="delVal" type="text" placeholder="Enter value to delete" />
+        <div class="controls" style="margin-top:10px">
+          <button id="delBtn" class="danger">Delete</button>
+          <button id="delClear" type="button" class="ghost">Clear</button>
+        </div>
+      </div>
+
+      <hr style="margin:14px 0;border:none;border-top:1px dashed #e8f4fb" />
+
+      <div id="graphArea" class="card">
+        <h3 style="margin-top:0">Graph Visualization</h3>
+        <label>Select Column</label>
+        <select id="graphCol"></select>
+        <div class="controls">
+          <select id="graphTypeSelect">
+            <option value="bar">Bar Chart</option>
+            <option value="pie">Pie Chart</option>
+          </select>
+          <select id="colorModeSelect">
+            <option value="auto">Auto Colors</option>
+            <option value="single">Single Color</option>
+          </select>
+          <button id="graphBtn">Show Graph</button>
+        </div>
+        <canvas id="graphCanvas"></canvas>
+        <div class="controls" style="justify-content:center;margin-top:10px">
+  <button id="downloadGraphBtn" class="ghost">💾 Download Graph</button>
+</div>
+
+        
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+  let headers=[], rows=[], originalRows=[], chart=null;
+  let currentGraphType='bar', colorMode='auto';
+  const fileInput=document.getElementById('fileInput');
+  const tableArea=document.getElementById('tableArea');
+  const dataTable=document.getElementById('dataTable');
+  const globalSearch=document.getElementById('globalSearch');
+  const backBtn=document.getElementById('backBtn');
+  const colSelect=document.getElementById('colSelect');
+  const colSearchVal=document.getElementById('colSearchVal');
+  const colSearchBtn=document.getElementById('colSearchBtn');
+  const anColSelect=document.getElementById('anColSelect');
+  const anOpSelect=document.getElementById('anOpSelect');
+  const analyzeBtn=document.getElementById('analyzeBtn');
+  const anResult=document.getElementById('anResult');
+  const graphCol=document.getElementById('graphCol');
+  const graphBtn=document.getElementById('graphBtn');
+  const graphCanvas=document.getElementById('graphCanvas');
+  const graphTypeSelect=document.getElementById('graphTypeSelect');
+  const colorModeSelect=document.getElementById('colorModeSelect');
+
+  const toggleAdd=document.getElementById('toggleAdd');
+  const toggleUpdate=document.getElementById('toggleUpdate');
+  const toggleDelete=document.getElementById('toggleDelete');
+  const addArea=document.getElementById('addArea');
+  const updateArea=document.getElementById('updateArea');
+  const deleteArea=document.getElementById('deleteArea');
+  const addForm=document.getElementById('addForm');
+  const addSubmit=document.getElementById('addSubmit');
+  const addClear=document.getElementById('addClear');
+  const updateKey=document.getElementById('updateKey');
+  const updateCol=document.getElementById('updateCol');
+  const updateVal=document.getElementById('updateVal');
+  const updateBtn=document.getElementById('updateBtn');
+  const delCol=document.getElementById('delCol');
+  const delVal=document.getElementById('delVal');
+  const delBtn=document.getElementById('delBtn');
+
+  // Event listeners
+  fileInput.addEventListener('change', handleFile);
+  colSearchBtn.addEventListener('click', ()=>applyColumnSearch(colSelect.value,colSearchVal.value));
+  analyzeBtn.addEventListener('click', analyzeColumn);
+  backBtn.addEventListener('click', ()=>{ rows=[...originalRows]; renderTable(); globalSearch.value=''; });
+  globalSearch.addEventListener('input', ()=>applyGlobalSearch(globalSearch.value));
+  graphBtn.addEventListener('click', ()=>drawGraph(graphCol.value));
+  graphTypeSelect.addEventListener('change', ()=>{ currentGraphType=graphTypeSelect.value; drawGraph(graphCol.value); });
+  colorModeSelect.addEventListener('change', ()=>{ colorMode=colorModeSelect.value; drawGraph(graphCol.value); });
+
+  toggleAdd.addEventListener('click', ()=>toggleSection(addArea));
+  toggleUpdate.addEventListener('click', ()=>toggleSection(updateArea));
+  toggleDelete.addEventListener('click', ()=>toggleSection(deleteArea));
+  addSubmit.addEventListener('click', e=>{ e.preventDefault(); addRow(); });
+  addClear.addEventListener('click', ()=>addForm.reset());
+  updateBtn.addEventListener('click', e=>{ e.preventDefault(); doUpdate(); });
+  delBtn.addEventListener('click', e=>{ e.preventDefault(); doDelete(); });
+
+  function handleFile(e){
+    const f=e.target.files[0]; if(!f)return;
+    const reader=new FileReader();
+    reader.onload=(ev)=>{
+      const wb=XLSX.read(ev.target.result,{type:'array'});
+      const sheet=wb.Sheets[wb.SheetNames[0]];
+      const json=XLSX.utils.sheet_to_json(sheet,{header:1,defval:''});
+      headers=json[0]||[];
+      rows=json.slice(1).map(r=>{const o={}; headers.forEach((h,i)=>o[h]=r[i]??''); return o;});
+      originalRows=rows.map(r=>({...r}));
+      renderTable();
+    };
+    reader.readAsArrayBuffer(f);
+  }
+
+  function renderTable(){
+    tableArea.style.display='block';
+    const thead=dataTable.querySelector('thead');
+    const tbody=dataTable.querySelector('tbody');
+    thead.innerHTML=''; tbody.innerHTML='';
+    const thr=document.createElement('tr');
+    headers.forEach(h=>{ const th=document.createElement('th'); th.textContent=h; thr.appendChild(th); });
+    thead.appendChild(thr);
+    rows.forEach(r=>{
+      const tr=document.createElement('tr');
+      headers.forEach(h=>{ const td=document.createElement('td'); td.textContent=r[h]??''; tr.appendChild(td); });
+      tbody.appendChild(tr);
+    });
+    populateSelects(); buildAddForm();
+  }
+
+  function populateSelects(){
+    [colSelect,anColSelect,updateCol,delCol,graphCol].forEach(sel=>{
+      sel.innerHTML='';
+      headers.forEach(h=>{const o=document.createElement('option'); o.value=h; o.textContent=h; sel.appendChild(o);});
+    });
+  }
+
+  function buildAddForm(){
+    addForm.innerHTML='';
+    headers.forEach(h=>{
+      const inp=document.createElement('input');
+      inp.name=h; inp.placeholder=h; addForm.appendChild(inp);
+    });
+  }
+
+  function toggleSection(sec){
+    [addArea,updateArea,deleteArea].forEach(s=>{if(s!==sec)s.style.display='none';});
+    sec.style.display=(sec.style.display==='block'?'none':'block');
+  }
+
+  function addRow(){
+    const inputs=addForm.querySelectorAll('input');
+    const obj={}; let filled=false;
+    inputs.forEach((inp,i)=>{ obj[headers[i]]=inp.value; if(inp.value)filled=true; });
+    if(!filled){alert('Please fill at least one field'); return;}
+    rows.push(obj); originalRows.push({...obj}); renderTable(); addForm.reset();
+  }
+
+  function doUpdate(){
+    const pk=headers[0]; const key=updateKey.value; const col=updateCol.value; const val=updateVal.value;
+    let found=false;
+    rows=rows.map(r=>{if(String(r[pk])===String(key)){r[col]=val;found=true;} return r;});
+    originalRows=originalRows.map(r=>{if(String(r[pk])===String(key)){r[col]=val;} return r;});
+    if(found){renderTable(); alert('Updated');} else alert('No matching record');
+  }
+
+  function doDelete(){
+    const col=delCol.value; const val=delVal.value;
+    rows=rows.filter(r=>String(r[col])!==String(val));
+    originalRows=originalRows.filter(r=>String(r[col])!==String(val));
+    renderTable(); alert('Deleted rows');
+  }
+
+  function applyGlobalSearch(q){
+    q=String(q||'').toLowerCase().trim();
+    if(!q){rows=[...originalRows]; renderTable(); return;}
+    rows=originalRows.filter(r=> Object.values(r).some(v=>String(v).toLowerCase().includes(q)));
+    renderTable();
+  }
+
+  function applyColumnSearch(col,val){
+    val=String(val||'').toLowerCase().trim();
+    if(!val){alert('Enter value'); return;}
+    rows=originalRows.filter(r=>String(r[col]).toLowerCase().includes(val));
+    renderTable();
+  }
+
+  function analyzeColumn(){
+    const col=anColSelect.value; const op=anOpSelect.value;
+    const vals=rows.map(r=>parseFloat(String(r[col]).replace(/[^0-9.-]+/g,''))).filter(v=>!isNaN(v));
+    let res='';
+    if(op==='sum') res=vals.reduce((a,b)=>a+b,0);
+    else if(op==='min') res=vals.length?Math.min(...vals):'N/A';
+    else if(op==='max') res=vals.length?Math.max(...vals):'N/A';
+    else if(op==='avg') res=vals.length?(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2):'N/A';
+    else if(op==='count') res=rows.length;
+    else if(op==='passfail'){const pass=rows.filter(r=>String(r[col])==='1').length; const fail=rows.filter(r=>String(r[col])==='0').length; res=`Pass: ${pass}, Fail: ${fail}`; anResult.style.display='block'; anResult.textContent=`Result for ${col}: ${res}`; drawGraph(col,{pass,fail}); return;}
+    anResult.style.display='block'; anResult.textContent=`Result for ${col}: ${res}`;
+    drawGraph(col);
+  }
+
+  function drawGraph(col,passFailData=null){
+    const ctx=graphCanvas.getContext('2d');
+    
+    if(chart){ chart.destroy(); chart=null; }
+
+    let labels=[], data=[], colors=[];
+    if(passFailData){
+      labels=['Pass','Fail'];
+      data=[passFailData.pass, passFailData.fail];
+      colors=['#00bfa5','#ff7043'];
+    } else {
+      const freq={};
+      rows.forEach(r=>{
+        const key=String(r[col]??'(empty)');
+        freq[key]=(freq[key]||0)+1;
+      });
+      labels=Object.keys(freq);
+      data=Object.values(freq);
+
+      // color handling
+      if(colorMode==='auto'){
+        colors=labels.map((_,i)=>`hsl(${(i*50)%360},70%,55%)`);
+      } else {
+        colors=labels.map(()=> '#2196f3');
+      }
+    }
+
+    const maxVal=Math.max(...(data.length?data:[1]),1);
+
+    chart=new Chart(ctx,{
+      type: currentGraphType,
+      data:{
+        labels,
+        datasets:[{
+          label: col,
+          data,
+          backgroundColor: colors,
+          borderColor: '#1976d2',
+          borderWidth: 1
+        }]
+      },
+      options:{
+        responsive:false,
+        maintainAspectRatio:false,
+        animation:false,
+        plugins:{legend:{display:(currentGraphType==='pie')}},
+        scales: currentGraphType==='pie' ? {} : { y:{beginAtZero:true,max:maxVal} }
+      }
+    });
+  }
+  
+  // ---- Download Graph as PNG Image ----
+const downloadGraphBtn = document.getElementById('downloadGraphBtn');
+
+downloadGraphBtn.addEventListener('click', ()=>{
+  if(!chart){
+    alert('No graph available to download!');
+    return;
+  }
+
+  // बेहतर क्वालिटी के लिए toBlob इस्तेमाल करें
+  if(graphCanvas.toBlob){
+    graphCanvas.toBlob(function(blob){
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'student_graph.png';
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }, 'image/png', 1.0);
+  } else {
+    // fallback for older browsers
+    const link = document.createElement('a');
+    link.download = 'student_graph.png';
+    link.href = graphCanvas.toDataURL('image/png');
+    link.click();
+  }
+});
+// ✅ Buttons
+const printBtn = document.getElementById('printBtn');
+const downloadXLSXBtn = document.getElementById('downloadXLSXBtn');
+const downloadCSVBtn = document.getElementById('downloadCSVBtn');
+
+
+// 🖨️ SAFE PRINT HANDLER (no script text issue)
+printBtn.addEventListener('click', () => {
+  if (!rows || !rows.length) {
+    alert('No data to print!');
+    return;
+  }
+
+  const pw = window.open('', '', 'width=900,height=700');
+  if (!pw) {
+    alert('Popup blocked — allow popups for this site to print.');
+    return;
+  }
+
+  const doc = pw.document;
+  doc.open();
+
+  const html = doc.documentElement || doc.createElement('html');
+  const head = doc.createElement('head');
+  const meta = doc.createElement('meta');
+  meta.setAttribute('charset', 'utf-8');
+  head.appendChild(meta);
+
+  const title = doc.createElement('title');
+  title.textContent = 'Print Table';
+  head.appendChild(title);
+
+  const style = doc.createElement('style');
+  style.type = 'text/css';
+  style.appendChild(doc.createTextNode(
+    'body{font-family:Arial,sans-serif;margin:20px;}'
+    + 'h2{text-align:center;color:#007acc;margin:0 0 12px 0;}'
+    + 'table{width:100%;border-collapse:collapse;margin-top:12px;}'
+    + 'th,td{border:1px solid #999;padding:8px;text-align:left;}'
+    + 'th{background:#007acc;color:#fff;}'
+    + 'tr:nth-child(even){background:#f9f9f9;}'
+  ));
+  head.appendChild(style);
+
+  const body = doc.createElement('body');
+  const h2 = doc.createElement('h2');
+  h2.textContent = 'Student Data Table';
+  body.appendChild(h2);
+
+  const table = doc.createElement('table');
+  const thead = doc.createElement('thead');
+  const headRow = doc.createElement('tr');
+  headers.forEach(h => {
+    const th = doc.createElement('th');
+    th.textContent = h;
+    headRow.appendChild(th);
+  });
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  const tbody = doc.createElement('tbody');
+  rows.forEach(r => {
+    const tr = doc.createElement('tr');
+    headers.forEach(h => {
+      const td = doc.createElement('td');
+      td.textContent = r[h] ?? '';
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  body.appendChild(table);
+
+  doc.documentElement.innerHTML = '';
+  doc.documentElement.appendChild(head);
+  doc.documentElement.appendChild(body);
+  doc.close();
+
+  pw.focus();
+  setTimeout(() => {
+    pw.print();
+  }, 200);
+});
+
+
+// 📊 EXCEL DOWNLOAD (XLSX)
+downloadXLSXBtn.addEventListener('click', () => {
+  if (!rows || !rows.length) {
+    alert('No data to download!');
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+  const wsData = [headers, ...rows.map(r => headers.map(h => r[h]))];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  XLSX.utils.book_append_sheet(wb, ws, 'Data');
+  XLSX.writeFile(wb, 'student_data.xlsx');
+});
+
+
+// 📄 CSV DOWNLOAD
+downloadCSVBtn.addEventListener('click', () => {
+  if (!rows || !rows.length) {
+    alert('No data to download!');
+    return;
+  }
+  const csvContent = [
+    headers.join(','), 
+    ...rows.map(r => headers.map(h => `"${(r[h] ?? '').toString().replace(/"/g, '""')}"`).join(','))
+  ].join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', 'student_data.csv');
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+});
+
+    
+  </script>
+</body>
+</html>
