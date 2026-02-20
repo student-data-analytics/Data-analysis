@@ -405,8 +405,193 @@
       link.click();
     }
   </script>
+  <!-- ================= CHATBOT START ================= -->
+
+<style>
+#apsChatToggle {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  background: #004aad;
+  color: white;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  cursor: pointer;
+  z-index: 9999;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+#apsChatbot {
+  position: fixed;
+  right: 20px;
+  bottom: 90px;
+  width: 360px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+  display: none;
+  overflow: hidden;
+  z-index: 9999;
+  font-family: "Poppins", sans-serif;
+}
+
+#apsChatHeader {
+  background: #002147;
+  color: white;
+  padding: 12px;
+  text-align: center;
+  font-weight: 600;
+}
+
+#apsChatBox {
+  height: 320px;
+  overflow-y: auto;
+  padding: 10px;
+  background: #f5f7fa;
+}
+
+.apsMsg {
+  margin: 6px 0;
+  padding: 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  white-space: pre-line;
+}
+
+.apsUser {
+  background: #007bff;
+  color: white;
+  text-align: right;
+}
+
+.apsBot {
+  background: #e9ecef;
+}
+
+#apsInputArea {
+  display: flex;
+  padding: 5px;
+  background: #ddd;
+}
+
+#apsInputArea input {
+  flex: 1;
+  padding: 6px;
+  border-radius: 5px;
+  border: none;
+}
+
+#apsInputArea button {
+  margin-left: 4px;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+</style>
+
+<div id="apsChatToggle" onclick="apsToggleChat()">💬</div>
+
+<div id="apsChatbot">
+  <div id="apsChatHeader">DASS Help Assistant</div>
+  <div id="apsChatBox"></div>
+  <div id="apsInputArea">
+    <input type="text" id="apsInput" placeholder="Ask something...">
+    <button onclick="apsVoice()">🎤</button>
+    <button onclick="apsSwitchLang()">🌐</button>
+    <button onclick="apsSend()">➤</button>
+  </div>
+</div>
+
+<script>
+let apsLang = "en";
+
+function apsToggleChat(){
+  const bot = document.getElementById("apsChatbot");
+  bot.style.display = bot.style.display === "none" ? "block" : "none";
+}
+
+function apsAddMsg(text,type){
+  const box = document.getElementById("apsChatBox");
+  const div = document.createElement("div");
+  div.className = "apsMsg " + type;
+  div.innerText = text;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function apsSend(){
+  const input = document.getElementById("apsInput");
+  const msg = input.value.trim();
+  if(!msg) return;
+  apsAddMsg(msg,"apsUser");
+  apsReply(msg.toLowerCase());
+  input.value="";
+}
+
+function apsReply(msg){
+
+let en="I'm here to help 😊 Ask about Excel upload, Survey, Converter, Resources or Graph download.";
+let hi="मैं आपकी सहायता के लिए यहाँ हूँ 😊 Excel upload, Survey, Converter, Resources या Graph download के बारे में पूछें।";
+
+if(msg.includes("hi")||msg.includes("hello")){
+en="Hello 👋 This platform analyzes student data using Excel or Survey.\nYou can upload Excel, convert PDF to Excel, generate graphs and download reports.";
+hi="नमस्ते 👋 यह प्लेटफॉर्म Excel या Survey से छात्र डेटा का विश्लेषण करता है।\nआप Excel अपलोड कर सकते हैं, PDF को Excel में बदल सकते हैं और ग्राफ डाउनलोड कर सकते हैं।";
+}
+
+else if(msg.includes("excel")){
+en="Only Excel (.xlsx/.csv) files are accepted.\nIf you don't have Excel file, use PDF to Excel Converter.";
+hi="केवल Excel (.xlsx/.csv) फ़ाइल स्वीकार की जाती है।\nयदि Excel फ़ाइल नहीं है तो PDF to Excel Converter उपयोग करें।";
+}
+
+else if(msg.includes("convert")){
+en="Use Converter option to convert PDF to Excel.\nAfter converting upload file for analysis.";
+hi="Converter विकल्प से PDF को Excel में बदलें और फिर अपलोड करें।";
+}
+
+else if(msg.includes("download")){
+en="You can download graphs as PNG image and print them easily.";
+hi="आप ग्राफ को PNG के रूप में डाउनलोड या प्रिंट कर सकते हैं।";
+}
+
+else if(msg.includes("resources")){
+en="Resources section provides large datasets related to Data Science, History and Visualization.";
+hi="Resources सेक्शन में Data Science और अन्य विषयों से जुड़े बड़े डाटासेट उपलब्ध हैं।";
+}
+
+setTimeout(()=>{
+apsAddMsg(apsLang==="en"?en:hi,"apsBot");
+},500);
+}
+
+function apsSwitchLang(){
+apsLang = apsLang==="en"?"hi":"en";
+alert("Language switched to "+(apsLang==="en"?"English":"Hindi"));
+}
+
+function apsVoice(){
+if (!('webkitSpeechRecognition' in window)) {
+alert("Voice not supported");
+return;
+}
+let recognition = new webkitSpeechRecognition();
+recognition.lang = apsLang==="en"?"en-US":"hi-IN";
+recognition.start();
+recognition.onresult=function(event){
+document.getElementById("apsInput").value=event.results[0][0].transcript;
+};
+}
+</script>
+
+<!-- ================= CHATBOT END ================= -->
 </body>
 </html>
+
 
 
 
